@@ -1,0 +1,31 @@
+# Permalinks
+#
+# Use of `relative_permalinks` ensures post links from the index work properly.
+permalink:           pretty
+
+# Setup
+title:               eltonlaw
+tagline:             "On our nutty world"
+url:                 eltonlaw.github.io
+baseurl:             ''
+paginate:            5
+
+# About/contact
+author:
+  name:              Elton Law
+  github:            https://github.com/eltonlaw
+  twitter:           https://twitter.com/eltonlaw_
+  email:             eltonlaw296@gmail.com
+defaults:
+  -
+    scope:
+      type: "posts"
+    values:
+      permalink: /post/:title
+markdown: kramdown
+gems:
+  - jekyll-paginate
+exclude:
+  - Gemfile
+  - Gemfile.lock
+timezone: Canada/Eastern
