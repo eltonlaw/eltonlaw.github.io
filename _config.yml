@@ -4,18 +4,19 @@
 permalink:           pretty
 
 # Setup
-title:               eltonlaw
-tagline:             "On our nutty world"
-url:                 eltonlaw.github.io
+title:               "d0nkrs"
+tagline:             "Something need doing? Work, Work."
+url:                 "eltonlaw.github.io"
 baseurl:             ''
 paginate:            5
 
 # About/contact
 author:
-  name:              Elton Law
-  github:            https://github.com/eltonlaw
-  twitter:           https://twitter.com/eltonlaw_
-  email:             eltonlaw296@gmail.com
+  name:              "Elton Law"
+  github:            "eltonlaw"
+  twitter:           "d0nkrs"
+  twitch:            "d0nkrs"
+  email:             "eltonlaw296@gmail.com"
 defaults:
   -
     scope:
@@ -28,4 +29,5 @@ gems:
 exclude:
   - Gemfile
   - Gemfile.lock
+exclude: [vendor]
 timezone: Canada/Eastern
