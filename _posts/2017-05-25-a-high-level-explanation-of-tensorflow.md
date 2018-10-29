@@ -91,7 +91,7 @@ TensorFlow can automatically calculate gradients, a much welcome relief, I've tr
 
 In the simplest scenario (single device, single process) the operations are executed sequentially. 
 
-![single_machine](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/tensorflow-guide/single_machine.png?raw=true){:.ci}
+![single_machine](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/tensorflow-guide/single_machine.png?raw=true){:.ci}
 <center><em>
 	Image licensed under Creative Commons by TensorFlow. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45166.pdf">Link</a>
 </em></center><br>
@@ -104,14 +104,14 @@ At the very beginning, the number of dependencies assigned to calculating that f
 
 To make this more concrete, here's a visualization of the calculation:
 	
-![tf_single_exec_1](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_1.png?raw=true){:.ci}
-![tf_single_exec_2](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_2.png?raw=true){:.ci}
-![tf_single_exec_3](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_3.png?raw=true){:.ci}
-![tf_single_exec_4](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_4.png?raw=true){:.ci}
+![tf_single_exec_1](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_1.png?raw=true){:.ci}
+![tf_single_exec_2](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_2.png?raw=true){:.ci}
+![tf_single_exec_3](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_3.png?raw=true){:.ci}
+![tf_single_exec_4](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/tensorflow-guide/single_device_execution_4.png?raw=true){:.ci}
 
 ### Multi-Device Implementation
 
-![distributed_system](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/tensorflow-guide/distributed_system.png?raw=true){:.ci}
+![distributed_system](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/tensorflow-guide/distributed_system.png?raw=true){:.ci}
 <center><em>
 	Image licensed under Creative Commons by TensorFlow. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45166.pdf">Link</a>
 </em></center>
@@ -127,7 +127,7 @@ Here's how TensorFlow tackles these problems:
 
 >"By handling communication in this manner, we also allow the scheduling of individual nodes of the graph on different devices to be decentralized into the workers: the Send and Receive nodes impart the necessary synchronization between different workers and devices, and the master only needs to issue a single Run request per graph execution to each worker that has any nodes for the graph, rather than being involved in the scheduling of every node or every cross-device communication. This makes the system much more scalable and allows much finer-granularity node executions than if the scheduling were forced to be done by the master." [^1]
 
-![cross_device_communication](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/tensorflow-guide/cross_device_communication.png?raw=true){:.ci}
+![cross_device_communication](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/tensorflow-guide/cross_device_communication.png?raw=true){:.ci}
 <center><em>
 	Image licensed under Creative Commons by TensorFlow. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45166.pdf">Link</a>
 </em></center> 

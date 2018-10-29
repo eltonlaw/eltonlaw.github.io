@@ -9,11 +9,11 @@ I'm a big fan of the [3Blue1Brown YouTube channel] which provides pretty, visual
 
 Well this math isn't gnarly but I think it's pretty neat so let's talk about factoring. Say we have a square:
 
-![x^2](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/a-visual-intuition-for-factoring/factoring_2.png?raw=true){:.ci}
+![x^2](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/a-visual-intuition-for-factoring/factoring_2.png?raw=true){:.ci}
 
 Remembering that the area of a square is just length times width, the area of this square would just be x*x or  x<sup>2</sup> Now take this same square and imagine we added y to both sides.
 
-![(x+y)^2](https://github.com/eltonlaw/devbum.github.io/blob/master/public/images/a-visual-intuition-for-factoring/factoring_2.png?raw=true){:.ci}
+![(x+y)^2](https://github.com/eltonlaw/eltonlaw.github.io/blob/master/public/images/a-visual-intuition-for-factoring/factoring_2.png?raw=true){:.ci}
 
 The new total area would now consist of: 
 * The original squares area, x*x
