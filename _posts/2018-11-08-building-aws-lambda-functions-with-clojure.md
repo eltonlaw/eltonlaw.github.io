@@ -24,38 +24,39 @@ Let's say we want to set up a RESTful service called `adder`. Setup a new [Leini
 
     4 directories, 4 files
 
-Change directory into it and you'll see a directory structure like the above, pretty standard stuff.
+Change directory into it and you'll see a directory structure like the above, pretty standard stuff. Inside `src/adder/core.clj` is the main stuff you want to focus on.
 
-    $ cat src/adder/core.clj
-    (ns adder.core
-      (:gen-class
-       :methods [^:static [handler [java.util.Map] String]]))
+```clojure
+(ns adder.core
+  (:gen-class
+   :methods [^:static [handler [java.util.Map] String]]))
 
 
-    (defprotocol ConvertibleToClojure
-      (->cljmap [o]))
+(defprotocol ConvertibleToClojure
+  (->cljmap [o]))
 
-    (extend-protocol ConvertibleToClojure
-      java.util.Map
-      (->cljmap [o] (let [entries (.entrySet o)]
-                    (reduce (fn [m [^String k v]]
-                              (assoc m (keyword k) (->cljmap v)))
-                            {} entries)))
+(extend-protocol ConvertibleToClojure
+  java.util.Map
+  (->cljmap [o] (let [entries (.entrySet o)]
+                (reduce (fn [m [^String k v]]
+                          (assoc m (keyword k) (->cljmap v)))
+                        {} entries)))
 
-      java.util.List
-      (->cljmap [o] (vec (map ->cljmap o)))
+  java.util.List
+  (->cljmap [o] (vec (map ->cljmap o)))
 
-      java.lang.Object
-      (->cljmap [o] o)
+  java.lang.Object
+  (->cljmap [o] o)
 
-      nil
-      (->cljmap [_] nil))
+  nil
+  (->cljmap [_] nil))
 
-    (defn -handler [s]
-      (println (->cljmap s))
-      (println "Hello World!"))
+(defn -handler [s]
+  (println (->cljmap s))
+  (println "Hello World!"))
+```
 
-Inside `src/adder/core.clj` is the main stuff you want to focus on.
+Here are the main points:
 
 * In setting the namespace a `:gen-class` directive is supplied to generate a bunch of class files `adder/core*.class` so that we can generate named classes that can be called in Java. I won't go into it here but checkout the docs [Ahead-of-time Compilation and Class Generation](https://clojure.org/reference/compilation).
 * The `:methods [^:static [handler [java.util.Map] String]]))` line defines a static method `handler` which takes in a parameter of type `java.util.Map` and returns a value of type `String`. The `^` inside `^:static` is called a metadata marker and in this instance sets `:static` to `true`.
@@ -64,32 +65,35 @@ Inside `src/adder/core.clj` is the main stuff you want to focus on.
 
 To implemenet the handler we would just write something like this. Inputs generally come in json format,
 
-
-    ;; Ex. {"input": [1, 2, 3, 4]}
-    (defn adder [nums]
-      (reduce + nums))
-    (defn -handler [s]
-      (adder (:input (->cljmap s) #",")))
+```clojure
+;; Ex. {"input": [1, 2, 3, 4]}
+(defn adder [nums]
+  (reduce + nums))
+(defn -handler [s]
+  (adder (:input (->cljmap s) #",")))
+```
 
 Say you want to be able to handle multiple inputs. You would need to modify the method definition too.
 
-    ;; Ex. {"input": [[1, 2, 3, 4],[5, 6, 7, 8]]}
-    ...
-    :methods [^:static [handler [java.util.Map] clojure.lang.LazySeq]]))
-    ...
-    (defn adder [nums]
-      (reduce + nums))
-    (defn -handler [s]
-      (map (adder (:input (->cljmap s) #","))))
+```clojure
+;; Ex. {"input": [[1, 2, 3, 4],[5, 6, 7, 8]]}
+...
+:methods [^:static [handler [java.util.Map] clojure.lang.LazySeq]]))
+...
+(defn adder [nums]
+  (reduce + nums))
+(defn -handler [s]
+  (map (adder (:input (->cljmap s) #","))))
+```
 
 And that should be enough to get you anywhere you want to go. Now to deploy it. Make sure you've already installed and setup the AWS CLI.
 
-    pip3 install awscli
+    $ pip3 install awscli
     aws configure
 
 Create your uploadable binary
 
-    lein uberjar
+    $ lein uberjar
 
 Create the Lambda function. You'll need to create a role that your Lambda can assume to have the proper permissions.
 
