@@ -93,7 +93,7 @@ Create your uploadable binary
 
 Create the Lambda function. You'll need to create a role that your Lambda can assume to have the proper permissions.
 
-    #/bin/bash
+    #!/bin/bash
     AWS_ACCOUNT_ID=XXXXXXXXXX # Should be some number
     ROLENAME=XXXXXX # A string name
     FUNCTION_NAME=adder
@@ -117,7 +117,7 @@ Now your Clojure code is on Lambda. To test whether it's working
 
 You should now have the output saved in `outfile.txt`. But invoking the Lambda directly isn't ideal. AWS has something called API Gateway which can be connected to, creating a REST endpoint.
 
-    #/bin/bash
+    #!/bin/bash
 
     # Create REST API: Regional endpoint with API key enabled
     aws apigateway create-rest-api \
@@ -149,7 +149,7 @@ You should now have the output saved in `outfile.txt`. But invoking the Lambda d
 
 Above we create a REST API that's open to the world. To add an `X-API-KEY` header for authentication:
 
-    #/bin/bash
+    #!/bin/bash
 
     # Create an API key
     aws apigateway create-api-key --name adder-api-key
