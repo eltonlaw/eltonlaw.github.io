@@ -1,11 +1,6 @@
 # d0nkrs.com
 
-Theme: Lanyon https://github.com/poole/lanyon
+Running boot tasks
 
-Developing locally
-
-    jekyll serve
-
-Generate site for production
-
-    jekyll build
+    boot fire -t "pants" -p
+    boot fire -t "pant"
