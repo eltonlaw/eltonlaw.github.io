@@ -1,21 +1,22 @@
 (ns web.core
-  (:require [mount.core :as mount]
+  (:require [mount.core :refer [defstate start]]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.file :refer [wrap-file]]
             [ring.middleware.resource :refer [wrap-resource]]
+            ; [hiccup.core :refer hc]
             [clojure.java.io :as io]))
 
 (defn handler [request]
   {:status 200
    :headers {"Content-Type" "text/html"}
-   :body "blahasdsadas "})
+   :body "reloaded"})
 
 (defn start-server []
-  (run-jetty handler {:http-port 3000 :async true}))
+  (run-jetty handler {:port 3000 :join? false}))
 
-(defn stop-server [s]
-  (.stop s))
+(defn stop-server [server]
+  (.stop server)(mount/start #'web.core/server))
 
-(mount/defstate ^{:on-reload :noop} repl-server
+(defstate server ; ^{:on-reload :noop} 
   :start (start-server)
-  :stop (stop-server repl-server))
+  :stop (stop-server server))
