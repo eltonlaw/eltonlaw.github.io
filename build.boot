@@ -1,30 +1,37 @@
 (set-env!
-  :resource-paths #{"src/clj"}
-  :dependencies '[[org.clojure/clojure "1.10.0"]
-                  [ring "1.7.1"]
-                  [adzerk/boot-reload "0.6.0" :scope "test"]
-                  [markdown-clj "1.0.7"]
-                  [mount "0.1.16"]
-                  [hiccup "1.0.5"]
+  :resource-paths #{"src" "markdown" "public"}
+  :dependencies '[[adzerk/boot-reload "0.6.0" :scope "test"]
                   [bidi "2.1.5"]
+                  [gbuisson/frontmatter "0.0.3"]
+                  [garden "1.3.9"]
+                  [hiccup "1.0.5"]
+                  [http-kit "2.3.0"]  
+                  [markdown-to-hiccup "0.6.2"]
+                  [mount "0.1.16"]
+                  [org.clojure/clojure "1.10.0"]
                   [org.danielsz/system "0.4.2"]])
+
+(task-options!
+  pom {:project 'web
+       :version "0.1.0-SNAPSHOT"
+       :description ""}
+  jar {:main 'web.core})
 
 (require '[web.core :as web]
          '[adzerk.boot-reload :refer [reload]]
          '[mount.core :as mount])
 
-(task-options!
-  pom {:project 'web
-       :version "0.0.1"}
-  jar {:manifest {"Foo" "bar"}})
+; (deftask dev
+;   []
+;   (comp
+;     (reload)
+;     (watch :verbose true)
+;     (repl :no-color true :init-ns 'boot.user)))
+;     ; (web/start-server!)))
 
-(deftask dev
-  []
+(deftask dev []
   (comp
-    (reload)
-    (watch :verbose true)
-    (repl :server true)))
-    ; (web/start-server!)))
+    (repl :no-color true :init-ns 'web.core)))
 
 (deftask build []
-  (comp (pom) (uber) (jar) (sift) (target)))
+  (comp (aot) (pom) (uber) (jar) (sift) (target)))
