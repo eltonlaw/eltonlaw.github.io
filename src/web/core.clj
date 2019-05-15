@@ -15,15 +15,20 @@
   (css [:body {:background "#f2f2f2" :color "#444444"
                :font-family "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
                :max-width "80%"}]
-       [:code {:background "white"}]
+       [:pre {:display "block"
+              :white-space "pre-wrap"
+              :word-break "break-word"}]
+              ; :margin "0"}]
+       [:pre [:code {:background "white"
+                     :display "block"
+                     :padding "1%"}]];
        [:a {:border-bottom "1px solid #444444" :color "#444444" :text-decoration "none"}]))
 
 (defn load-md [filename]
   (-> filename
       io/resource
       slurp
-      fm/parse
-      (update :body m/md->hiccup)))
+      fm/parse))
 
 (defn post-header [{:keys [layout title date]}]
   [:div
@@ -34,7 +39,11 @@
   (for [{:keys [frontmatter body]} (map load-md filenames)]
     [:div
      (post-header frontmatter)
-     [:div body]]))
+     [:div {:id "content"}]
+     [:script (format "document.getElementById('content').innerHTML = marked(`%s`);"
+                      (-> body
+                          (str/replace "\\" "\\\\")
+                          (str/replace "`" "\\`")))]]))
 
 (defn home-page []
   (html5
@@ -46,14 +55,14 @@
              :content ""}]
      [:style (style)]]
     [:body
-     [:title "Loads of Crap"]
-     (posts "2018-03-07-docker-for-python-testing.md"
-            "2018-11-08-building-aws-lambda-functions-with-clojure.md")]))
+     [:title "Title"]
+     [:script {:src "https://cdn.jsdelivr.net/npm/marked/marked.min.js"}]
+     (posts "2018-11-08-building-aws-lambda-functions-with-clojure.md"
+            "2018-03-07-docker-for-python-testing.md")]))
 
 (defn handler [request]
   {:status 200
    :headers {"Content-Type" "text/html"}
-   ; :body "asdasdasd"
    :body (hc/html (home-page))})
 
 (defn start-server []
