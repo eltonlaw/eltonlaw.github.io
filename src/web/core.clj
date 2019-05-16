@@ -37,13 +37,15 @@
 
 (defn posts [& filenames]
   (for [{:keys [frontmatter body]} (map load-md filenames)]
-    [:div
-     (post-header frontmatter)
-     [:div {:id "content"}]
-     [:script (format "document.getElementById('content').innerHTML = marked(`%s`);"
-                      (-> body
-                          (str/replace "\\" "\\\\")
-                          (str/replace "`" "\\`")))]]))
+    (let [content-id (str "post" (hash frontmatter))]
+      [:div
+       (post-header frontmatter)
+       [:div {:id content-id}]
+       [:script (format "document.getElementById('%s').innerHTML = marked(`%s`);"
+                        content-id
+                        (-> body
+                            (str/replace "\\" "\\\\")
+                            (str/replace "`" "\\`")))]])))
 
 (defn home-page []
   (html5
