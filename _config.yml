@@ -24,7 +24,7 @@ defaults:
     values:
       permalink: /post/:title
 markdown: kramdown
-gems:
+plugins:
   - jekyll-paginate
 exclude:
   - Gemfile
