@@ -26,6 +26,7 @@ defaults:
 markdown: kramdown
 plugins:
   - jekyll-paginate
+  - jekyll-feed
 exclude:
   - Gemfile
   - Gemfile.lock

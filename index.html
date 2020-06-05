@@ -12,7 +12,7 @@ title: Home
       </a>
     </h1>
 
-    <span class="post-date">{{ post.last_modified }}</span>
+    <span class="post-date">{{ post.date | date: '%Y-%m-%d %-I:%M %p' }}</span>
 
     {{ post.content }}
   </div>
