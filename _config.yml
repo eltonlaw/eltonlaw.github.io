@@ -5,7 +5,8 @@ permalink:           pretty
 
 # Setup
 title:               "d0nkrs"
-tagline:             "sundries"
+subtitle:            "sundries"
+tagline:             "Personal blog. Programming and etc."
 url:                 "eltonlaw.github.io"
 baseurl:             ''
 paginate:            5
