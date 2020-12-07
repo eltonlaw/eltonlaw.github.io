@@ -1,0 +1,12 @@
+.ct {
+    text-align: center;
+}
+
+.ci {
+    margin: 0 auto;
+    display: block;
+}
+
+.inline-blk {
+    display:inline-block;
+}
