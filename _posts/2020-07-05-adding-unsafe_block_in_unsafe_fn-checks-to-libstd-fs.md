@@ -2,7 +2,7 @@
 layout: post
 title: "Adding unsafe_block_in_unsafe_fn linting to libstd/fs.rs"
 date: 2020-07-05 22:26:12 PM
-categories:
+categories: finalized
 ---
 
 I recently had the pleasure of [adding a `deny` lint to `libstd/fs.rs` in `rustc`](https://github.com/rust-lang/rust/pull/73909), this is documentation of that process.

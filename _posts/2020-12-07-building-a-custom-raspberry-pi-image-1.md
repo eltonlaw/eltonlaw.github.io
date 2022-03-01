@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "Building a custom raspberry pi image - part 1"
-date: 2020-12-07 04:29:48 AM 
-categories:
+date: 2020-12-07 04:29:48 AM
+categories: finalized
 ---
 
 This was motivated by listening to Jay Carlson's [Amp Hour podcast](https://theamphour.com/515-embedded-linux-with-jay-carlson/) and reading his blog post ["So You Want to Build an Embedded Linux System?"](https://jaycarlson.net/embedded-linux/). The following was done on a raspberry pi 3B.
