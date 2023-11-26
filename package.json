@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "gh-pages -d out"
+    "deploy": "gh-pages -d out --nojekyll"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.0.0",
