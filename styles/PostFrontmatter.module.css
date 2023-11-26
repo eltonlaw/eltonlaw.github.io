@@ -1,0 +1,11 @@
+.postTitle {
+  color: #303030;
+  margin-top: 1.25em;
+  margin-bottom: 0.1em;
+}
+
+.postDate {
+  display: block;
+  margin-bottom: 1em;
+  color: #9a9a9a;
+}
