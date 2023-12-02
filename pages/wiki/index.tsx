@@ -3,6 +3,7 @@ import AppContainer from '../../components/AppContainer.tsx';
 
 const WikiIndex = () => {
   const wikiPages = [
+    { title: 'Clojure', path: '/wiki/clojure' },
   ];
 
   return (
