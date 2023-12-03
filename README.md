@@ -13,3 +13,11 @@ Build nextjs app as static website and deploy built `out/` dir to branch `gh-pag
 yarn build
 yarn deploy
 ```
+
+## Deploy
+
+Statically render components and put outputs in `gh-pages` branch, GitHub pages is configured to use that branch.
+
+```
+yarn deploy
+```
