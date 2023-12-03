@@ -7,7 +7,7 @@ const WikiIndex = () => {
   ];
 
   return (
-    <AppContainer title="Elton Law" description="Wiki">
+    <div>
       <h1>Wiki Index</h1>
       <ul>
         {wikiPages.map(page => (
@@ -16,7 +16,7 @@ const WikiIndex = () => {
           </li>
         ))}
       </ul>
-    </AppContainer>
+    </div>
   );
 };
 
