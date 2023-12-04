@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import styles from '../styles/AppContainer.module.css';
+import styles from '@/styles/RootLayout.module.css';
 
 export const metadata = {
   title: 'eltonlaw',

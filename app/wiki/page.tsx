@@ -1,23 +1,14 @@
 import Link from 'next/link';
-import AppContainer from '../../components/AppContainer.tsx';
+import PageIndex from '@/components/PageIndex';
 
-const WikiIndex = () => {
-  const wikiPages = [
-    { title: 'Clojure', path: '/wiki/clojure' },
-  ];
+const pages = [
+  { title: 'Clojure', path: '/wiki/clojure' },
+];
 
+const Page = () => {
   return (
-    <div>
-      <h1>Wiki Index</h1>
-      <ul>
-        {wikiPages.map(page => (
-          <li key={page.path}>
-            <Link href={page.path}>{page.title}</Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <PageIndex name="Wiki" pages={pages} />
   );
 };
 
-export default WikiIndex;
+export default Page;

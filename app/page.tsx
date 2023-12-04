@@ -1,18 +1,13 @@
+import Blog from 'app/blog/page';
+import Wiki from 'app/wiki/page';
 
-import AppContainer from '../components/AppContainer.tsx';
-
-const Blog = () => {
+const HomePage: NextPage = ({characters}: any) => {
   return (
     <div>
-      Placeholder
+      <Blog/>
+      <Wiki/>
     </div>
   )
 }
 
-const Home: NextPage = ({characters}: any) => {
-  return (
-    <Blog/>
-  )
-}
-
-export default Home
+export default HomePage
