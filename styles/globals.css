@@ -6,11 +6,6 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
-.title-link {
-  color: #268bd2;
-  text-decoration: none;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -19,14 +14,27 @@ h1, h2, h3, h4, h5, h6 {
   font-family: "PT Sans", Helvetica, Arial, sans-serif;
   letter-spacing: -0.025em;
   line-height: 1.25;
-  color: #268bd2;
+}
+
+h1, h2 {
+  color: #505050;
+}
+
+h3, h4 {
+  color: #303030;
+}
+
+h5, h6 {
+  color: #101010;
 }
 
 code {
   padding: 0.25em 0.5em;
   font-size: 85%;
   background-color: #f9f9f9;
-  border-radius: 3px;
+  border-radius: 5px;
+  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
+    Bitstream Vera Sans Mono, Courier New, monospace;
 }
 
 pre {
