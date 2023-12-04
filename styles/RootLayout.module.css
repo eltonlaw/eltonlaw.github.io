@@ -1,0 +1,34 @@
+.container {
+  padding: 0 2rem;
+  max-width: 1200px;
+}
+
+.masthead {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+  border-bottom: 1px solid #eee;
+}
+
+.masthead h3 {
+  padding-right: 3px;
+}
+
+.masthead h3 .titleLink {
+  color: #505050;
+  text-decoration: none;
+}
+
+.masthead h3 small {
+  font-size: 75%;
+  font-weight: 400;
+  color: #c0c0c0;
+  letter-spacing: 0;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    width: 100%;
+    flex-direction: column;
+  }
+}

@@ -1,4 +1,4 @@
-import styles from '../styles/PostFrontmatter.module.css'
+import styles from '@/styles/PostFrontmatter.module.css'
 
 function PostFrontmatter( props : any) {
   return (

@@ -1,0 +1,22 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Clojure"
+    postDate="Last Updated: 2023-11-26 2:27AM" />
+
+Clojure is a functional, Lisp-style programming language. There are compilers written in Javascript, C# and the JVM.
+
+There are [just a few data structures](https://clojure.org/reference/data_structures) by design. The variety is in all the functions that can operate on these data structures. If you can represent your problem as some combination of the available data structures you suddently get a lot of functionality out of the box from the stuff available by default in `clojure.core`. It's a pretty good design principle and goes pretty far. For example, [metosin/reitit](https://github.com/metosin/reitit) is a routing library that represents routes as nested vectors. In the example below, `ring/router` gets passed this `routes` var and even if I don't know how this library works I can start doing some stuff with it by nature of it being a vector and I know I can use `map`, `filter`, `take`, `concat`, `conj` and so on to vectors.
+
+```clojure
+...
+(def routes
+  ["/api"
+   ["/math" {:get {:parameters {:query {:x int?, :y int?}}
+                   :responses  {200 {:body {:total int?}}}
+                   :handler    (fn [{{{:keys [x y]} :query} :parameters}]
+                                 {:status 200
+                                  :body   {:total (+ x y)}})}}]])
+
+(def app (ring/ring-handler (ring/router routes {})))
+```

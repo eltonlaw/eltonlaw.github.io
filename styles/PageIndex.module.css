@@ -1,0 +1,33 @@
+.indexTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
+  font-weight: bold;
+}
+
+.indexList {
+  list-style: none;
+  padding: 0;
+  margin: 0 right;
+  max-width: 600px;
+}
+
+.indexListItem {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.3s;
+}
+
+.indexListItem:hover {
+  background-color: #eaeaea;
+}
+
+.indexListItem a {
+  color: #0070f3;
+  text-decoration: none;
+  font-weight: 500;
+}
+
