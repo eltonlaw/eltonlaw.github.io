@@ -7,9 +7,12 @@ const pages = [
 ].sort((a, b) => {
   // sort in descending order of date
   const dateRegex = /(\d{4}-\d{2}-\d{2})/;
-  const dateA = new Date(a.path.match(dateRegex)[0]);
-  const dateB = new Date(b.path.match(dateRegex)[0]);
-  return dateB - dateA;
+  const matchA = a.path.match(dateRegex);
+  const matchB = b.path.match(dateRegex);
+  const dateA = matchA ? new Date(matchA[0]) : new Date(0); // default to epoch if no match
+  const dateB = matchB ? new Date(matchB[0]) : new Date(0); // default to epoch if no match
+
+  return dateB.getTime() - dateA.getTime();
 });
 
 const Page = () => {

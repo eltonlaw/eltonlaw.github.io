@@ -1,3 +1,4 @@
+import { NextPage } from 'next';
 import Blog from 'app/blog/page';
 import Wiki from 'app/wiki/page';
 
