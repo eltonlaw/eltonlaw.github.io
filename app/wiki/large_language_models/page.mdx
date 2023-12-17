@@ -1,0 +1,26 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Large Language Models"
+    postDate="Last Updated: 2023-12-04 10:07PM" />
+
+1. Raw strings are turned into tokens by a tokenizer.
+
+"Larger models can typically use a larger batch size but require a smaller learning rate"
+
+Beam search using a beam width of 4 and a length penalty of alpha = 0.6
+
+## Finetuning
+
+Task-specific datasets and finetuning required. This is difficult because lots of tasks are going to be very difficult to collect datasets for. 
+
+The more complicated the task and the less data there is, the more likely the model will fall-back on random shit it learned during pretraining. Humans don't require large supervised datasets to learn most language tasks, at most a tiny number of demonstrations is often enough.
+
+Unsupervised pre-training teaches the model a broad amount of skills and at inference time we can use some combination of those to do the task we give it.
+
+By giving models a task description we can have higher accuracy than without the task description up to a certain point where enough examples of the task have been given.
+
+Meta-learning/Zero-shot transfer is for the idea of providing task specific inputs + instruction only at inference time. There is zero-shot, one-shot, few-shot for how many demonstrations are provided at runtime. Zero and one-shot are relevant distinctions because they're closer to human learning. These *-shot learnings are not competing alternatives but have different problem settings.
+
+Curated datasets (using similarity to hand-picked elements) perform better than unfiltered or lightly filtered verions of the same dataset.
+
