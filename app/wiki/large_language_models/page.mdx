@@ -12,6 +12,14 @@ Beam search using a beam width of 4 and a length penalty of alpha = 0.6
 
 ## Finetuning
 
+A few different approaches:
+
+1. Keep pretrained model frozen, train a classifier on the embedding
+2. Keep pretrained model frozen, attach extra hidden layers and a new output layer
+3. Don't freeze the model
+
+Usually the more layers you update the better the performance [^1]
+
 Task-specific datasets and finetuning required. This is difficult because lots of tasks are going to be very difficult to collect datasets for. 
 
 The more complicated the task and the less data there is, the more likely the model will fall-back on random shit it learned during pretraining. Humans don't require large supervised datasets to learn most language tasks, at most a tiny number of demonstrations is often enough.
@@ -24,3 +32,5 @@ Meta-learning/Zero-shot transfer is for the idea of providing task specific inpu
 
 Curated datasets (using similarity to hand-picked elements) perform better than unfiltered or lightly filtered verions of the same dataset.
 
+[^1]: "Finetuning Open-Source LLMs." Youtube, uploaded by Sebastian Raschka, 14 Oct. 2023, https://youtu.be/gs-IDg-FoIQ?si=OCUI22mSHWSfmFK6&t=375
+[^2]: 
