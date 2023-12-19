@@ -1,0 +1,75 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Large Language Models"
+    postDate="Last Updated: 2023-12-04 10:07PM" />
+
+Inference Pipeline
+
+1. Raw strings are mapped to tokens in a vocabulary where a vocab looks like `{" ": 0,  "lo": 1, "hel": 2, "r": 3, "wo": 4, "ld": 5}` and the resulting tokens for `"hello world"` would be `[2, 1, 0, 4, 3, 5]`. Part of a GPT-2's vocab is below. It uses Byte-Pair encoding meaning tokens are parts of words. There are a lot of `Ġ` characters and those indicate the start of a new word. So `Ġaut` creates a token for the first 3 letters of"author" whereas `aut` wouldn't, instead `aut`'s value would substituted in the middle for a word like "nautilus". There's usually a padding and truncation element so that inputs are normalized to be a certain shape.
+```
+In [1]: from transformers import AutoTokenizer
+In [2]: tokenizer = AutoTokenizer.from_pretrained("gpt2")
+In [3]: tokenizer.get_vocab()
+Out[3]:
+{'Ġaut': 1960,
+ 'roleum': 21945,
+ '151': 24309,
+ 'ascal': 27747,
+ 'azeera': 28535,
+ 'Ġchore': 30569,
+ '][': 7131,
+ 'ĠEns': 48221,
+ ...}
+In [4]: len(tokenizer.get_vocab())
+Out[4]: 50279
+In [5]: tokenizer.encode("hello world", return_tensors="pt")
+Out[5]: tensor([[31373,   995]])
+In [6]: tokenizer.encode("hello world hello world", return_tensors="pt")
+Out[6]: tensor([[31373,   995, 23748, 995]])
+In [7]: tokenizer.encode("hello world", return_tensors="pt", max_length=10, padding="max_length", truncation=True)
+Out[7]: tensor([[31373,   995, 50259, 50259, 50259, 50259, 50259, 50259, 50259, 50259]])
+In [8]: tokenizer.encode("hello world", return_tensors="pt", max_length=10, padding="max_length", truncation=True)
+Out[8]: tensor([[31373]])
+```
+2. Tokens are converted into a numerical representation known as an embedding. Each token would turn into something like `[0.14321, 0.098342, -1.12378 ...]`). GPT-2 has a vocab size of 50257, and embeddings have size of 768 so the embedding layer is `(n_vocab, n_embeddings)`. (`wte` stands for word token embeddings)
+```
+In [1]: from transformers import AutoModel
+
+In [2]: model = AutoModel.from_pretrained("gpt2")
+
+In [3]: model.wte
+Out[3]: Embedding(50257, 768)
+```
+3. Feedforward through some fully connected layers and self attention layers
+4. Head layer is of shape `(n_embedding, n_vocab)`
+```
+In [2]: model = AutoModelForCausalLM.from_pretrained("gpt2")
+
+In [3]: model.lm_head
+Out[3]: Linear(in_features=768, out_features=50257, bias=False)
+```
+5. Softmax of output values, use token associated with max value as the next token
+
+### Finetuning
+
+Finetuning is when you start with an already trained model as opposed to a randomly initialized model. The benefits to this are that you're able to leverage larger general datasets, leverage models trained already and use less resources. Available approaches:
+
+1. Keep pretrained model frozen, remove logits layer, train a classifier on the embedding
+2. Keep pretrained model frozen, attach extra hidden layers to the end
+3. Only freeze parts of the pretrained model, rest is trained, lots of variety in how the selection happens
+4. Don't freeze the model, use pretrained model as the initialization values. More prone to catastrophic forgetting.
+
+### Uncategorized Notes
+
+- Usually the more layers you update the better the performance [^1]
+- Task-specific datasets and finetuning required. This is difficult because lots of tasks are going to be very difficult to collect datasets for.
+- The more complicated the task and the less data there is, the more likely the model will fall-back on things it learned during pretraining. Humans don't require large supervised datasets to learn most language tasks, at most a tiny number of demonstrations is often enough.
+- Unsupervised pre-training teaches the model a broad amount of skills and at inference time we can use some combination of those to do the task we give it.
+- By giving models a task description we can have higher accuracy than without the task description up to a certain point where enough examples of the task have been given.
+- Meta-learning/Zero-shot transfer is for the idea of providing task specific inputs + instruction only at inference time. There is zero-shot, one-shot, few-shot for how many demonstrations are provided at runtime. Zero and one-shot are relevant distinctions because they're closer to human learning. These *-shot learnings are not competing alternatives but have different problem settings.
+- Curated datasets (using similarity to hand-picked elements) perform better than unfiltered or lightly filtered verions of the same dataset.
+- T5 beam search using a beam width of 4 and a length penalty of alpha = 0.6
+- "Larger models can typically use a larger batch size but require a smaller learning rate"
+
+[^1]: "Finetuning Open-Source LLMs." Youtube, uploaded by Sebastian Raschka, 14 Oct. 2023, https://youtu.be/gs-IDg-FoIQ?si=OCUI22mSHWSfmFK6&t=375
