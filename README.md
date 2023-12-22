@@ -19,5 +19,6 @@ yarn deploy
 Statically render components and put outputs in `gh-pages` branch, GitHub pages is configured to use that branch.
 
 ```
+yarn build
 yarn deploy
 ```
