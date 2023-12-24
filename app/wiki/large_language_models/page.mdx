@@ -6,7 +6,7 @@ import PostFrontmatter from "@/components/PostFrontmatter.tsx";
 
 ### Inference Pipeline
 
-1. Raw strings are mapped to tokens in a vocabulary where a vocab looks like `{" ": 0,  "lo": 1, "hel": 2, "r": 3, "wo": 4, "ld": 5}` and the resulting tokens for `"hello world"` would be `[2, 1, 0, 4, 3, 5]`. Part of a GPT-2's vocab is below. It uses Byte-Pair encoding meaning tokens are parts of words. There are a lot of `Ġ` characters and those indicate the start of a new word. So `Ġaut` creates a token for the first 3 letters of"author" whereas `aut` wouldn't, instead `aut`'s value would substituted in the middle for a word like "nautilus". There's usually a padding and truncation element so that inputs are normalized to be a certain shape.
+1. Raw strings are mapped to tokens in a vocabulary where a vocab looks like `{" ": 0,  "lo": 1, "hel": 2, "r": 3, "wo": 4, "ld": 5}` and the resulting tokens for `"hello world"` would be `[2, 1, 0, 4, 3, 5]`. Part of GPT-2's vocab is below. It uses Byte-Pair Encoding so tokens are parts of words. There are a lot of `Ġ` characters and those are special, indicating the start of a new word. `Ġaut` creates a token for the first 3 letters of"author" whereas `aut` wouldn't, instead `aut`'s value would substituted in the middle for a word like "nautilus". There's usually a padding and truncation element so that inputs are normalized to be a certain shape.
 ```
 In [1]: from transformers import AutoTokenizer
 In [2]: tokenizer = AutoTokenizer.from_pretrained("gpt2")
