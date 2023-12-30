@@ -12,18 +12,20 @@
   "dependencies": {
     "@mdx-js/loader": "^3.0.0",
     "@mdx-js/react": "^3.0.0",
-    "@next/mdx": "^14.0.3",
-    "next": "^14.0.3",
+    "@next/mdx": "^14.0.4",
+    "next": "^14.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "remark-gfm": "^4.0.0"
+    "rehype-katex": "^7.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
-    "@types/node": "20.10.0",
-    "@types/react": "18.2.38",
-    "eslint": "8.54.0",
-    "eslint-config-next": "^14.0.3",
-    "gh-pages": "^6.1.0",
-    "typescript": "5.3.2"
+    "@types/node": "20.10.6",
+    "@types/react": "18.2.46",
+    "eslint": "8.56.0",
+    "eslint-config-next": "^14.0.4",
+    "gh-pages": "^6.1.1",
+    "typescript": "5.3.3"
   }
 }
