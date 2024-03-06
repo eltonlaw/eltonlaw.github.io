@@ -16,7 +16,7 @@ interface PageIndexProps {
 const PageIndex = ({ name, pages }: PageIndexProps) => {
   return (
     <div>
-      <h1 className={styles.indexTitle}>{name}</h1>
+      <h2 className={styles.indexTitle}>{name}</h2>
       <ul className={styles.indexList}>
         {pages.map((page, index) => (
           <li key={index} className={styles.indexListItem}>

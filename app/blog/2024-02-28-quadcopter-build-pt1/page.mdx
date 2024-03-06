@@ -1,0 +1,27 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Building a Quadcopter Pt.1"
+    postDate="2024-02-28 1:28AM" />
+
+This is a log for a build of a 7" autonomous quadcopter. I don't know enough about finding and matching components so many selections were finalized by popularity, good documentation or availability of breakout boards. It's a lot easier to figure things out when people have posted a project using that component on Hackaday or if there's  a known, working, reference implementation in Arduino.
+
+Currently the FC and ESC stack look like:
+
+- Flight Controller: [STM32G070RB](https://www.digikey.ca/en/products/detail/stmicroelectronics/STM32G070RBT6/10326753)
+- IMU: [ICM-20948](https://www.digikey.ca/en/products/detail/tdk-invensense/ICM-20948/6623535)
+- GPS: [SAM-M10Q](https://www.digikey.ca/en/products/detail/u-blox/SAM-M10Q-00B/16672678)
+- ESC: [Foxeer Reaper F4 Mini 4in1](https://www.foxeer.com/foxeer-reaper-f4-mini-128k-4in1-bl32-60a-esc-9-40v-20-20mm-m3-g-419)
+
+I'm expecting to use this as a cheap, customizable platform for running experiments. First thing chosen was the frame. 5" propellers seems to be common for FPV but 7" or larger seems to be more common for commercial or scientific drones. Larger propellors are more efficient and stable but sacrifice in maneuverability. I doubt missions are going to require too much gymnastics so going larger seems sensible in that it allows for more weight. That will provide some flexiblility for extra sensors or different payloads down the road. I originally selected this frame, "[RVS The Bigg Yeet 7" Frame Kit](https://rotorvillage.ca/rvs-the-big-yeet-7-frame-kit/)" and followed the recommendations on the battery, props and motors. It was out of stock so I bought everything else first, that all arrived and the frame still wasn't available so I got impatient and picked something else up. There are different recommendations for parts but it should hopefully be irrelevant.
+
+- 7" Frame: [GEPRC GEP LC7 FPV Long Rande Drone Frame Kit](https://dronedynamics.ca/products/geprc-gep-lc7-fpv-long-range-drone-frame-kit)
+- Battery: [GNB 1850mAh 5S 120C XT60](https://rotorvillage.ca/gnb-1850mah-6s-120c-xt60/)
+- Props: [HQ Prop 7X3.5X3 Grey](https://rotorvillage.ca/hq-prop-7x3-5x3-grey-2cw-2ccw/)
+- Motors: [GEPRC EM2810 1350KV Motor](https://geprc.com/product/geprc-em2810-motor/)
+
+The battery I got provides 22.8V, with max of 25.2 and min of 18V, so I'm going to need to step that down to 3.3V since the IMU, GPS and STM32G070RB all use that. I've chosen a LM2596 buck converter to step down the voltage, I'm a bit worried about it messing with the magnetometer and GPS readings but 
+
+"The ESC's current rating should be 10-20% higher than the motor's" [^1], so peak current for the motors I chose is 54A, need something between 60A and 65A. I picked this [Foxeer Reaper F4 Mini](https://www.foxeer.com/foxeer-reaper-f4-mini-128k-4in1-bl32-60a-esc-9-40v-20-20mm-m3-g-419) since it was cheap, operated within a safe current range and supports DShot600 and DShot1200. The mounting holes are for a 20x20mm so the flight controller will need to have mounting holes in the same spot. DShot is a protocol for encoding the duty cycle and I figured that I could just hotswap the ESC with something stronger if needed, as long as it's standardized.
+
+[^1]: https://www.tytorobotics.com/blogs/articles/what-is-an-esc-how-does-an-esc-work

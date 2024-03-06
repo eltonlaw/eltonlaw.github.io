@@ -1,9 +1,8 @@
 .indexTitle {
-  font-size: 2rem; /* Slightly larger for prominence */
-  margin-bottom: 2rem; /* More space below the title */
-  text-align: left; /* Centered title */
-  font-weight: 600; /* Slightly less bold for a modern look */
-  color: #333; /* Darker color for better readability */
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
+  font-weight: bold;
 }
 
 .indexList {
