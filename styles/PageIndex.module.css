@@ -1,33 +1,59 @@
 .indexTitle {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  text-align: left;
-  font-weight: bold;
+  font-size: 2rem; /* Slightly larger for prominence */
+  margin-bottom: 2rem; /* More space below the title */
+  text-align: left; /* Centered title */
+  font-weight: 600; /* Slightly less bold for a modern look */
+  color: #333; /* Darker color for better readability */
 }
 
 .indexList {
   list-style: none;
   padding: 0;
-  margin: 0 right;
-  max-width: 600px;
+  max-width: 600px; /* Keeping your max-width */
+  display: flex; /* Introducing flexbox */
+  flex-direction: column; /* Stack items vertically */
+  gap: 0.5rem; /* Adds space between items without margin-bottom */
 }
 
 .indexListItem {
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  transition: background-color 0.3s;
+  background-color: #fff; /* Pure white for a clean look */
+  border: 1px solid #e1e1e1; /* Lighter border */
+  border-radius: 10px; /* More pronounced rounded corners */
+  padding: 1.1rem; /* More padding for a spacious look */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Soft shadow for depth */
+  position: relative; /* Needed for the pseudo-element */
+  transition: all 0.3s ease; /* Smooth transition for hover effects */
+}
+
+.indexListItem:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background-color: #0070f3; /* Bright border color */
+  border-radius: 10px 0 0 10px; /* Rounded on the left side */
+  transform: scaleY(0);
+  transition: transform 0.3s ease; /* Smooth transition */
 }
 
 .indexListItem:hover {
-  background-color: #eaeaea;
+  background-color: #f5f5f5; /* Lighter grey on hover */
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1); /* Enhanced shadow on hover */
+}
+
+.indexListItem:hover:before {
+  transform: scaleY(1); /* Reveal the border color on hover */
 }
 
 .indexListItem a {
-  color: #0070f3;
-  text-decoration: none;
-  font-weight: 500;
+  color: #0056b3; /* More vibrant link color */
+  text-decoration: none; /* No underline */
+  font-weight: 500; /* Keeping your font weight */
+  transition: color 0.2s; /* Smooth color transition on hover */
 }
 
+.indexListItem a:hover {
+  color: #003580; /* Darker shade on hover for interaction feedback */
+}
