@@ -51,9 +51,22 @@
   color: #0056b3; /* More vibrant link color */
   text-decoration: none; /* No underline */
   font-weight: 500; /* Keeping your font weight */
+  flex-grow: 1; /* Allows the link to grow and push the date to the right */
   transition: color 0.2s; /* Smooth color transition on hover */
 }
 
 .indexListItem a:hover {
   color: #003580; /* Darker shade on hover for interaction feedback */
+}
+
+.pageContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pageDate {
+  color: #666; /* Slightly muted color for the date */
+  font-size: 0.9rem; /* Smaller font size for subtlety */
+  margin-left: auto; /* Ensures it stays right-aligned */
 }

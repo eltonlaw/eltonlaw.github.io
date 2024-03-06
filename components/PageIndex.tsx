@@ -4,6 +4,7 @@ import styles from '@/styles/PageIndex.module.css';
 interface Page {
   title: string;
   path: string;
+  date: string;
 }
 
 interface PageIndexProps {
@@ -19,7 +20,10 @@ const PageIndex = ({ name, pages }: PageIndexProps) => {
       <ul className={styles.indexList}>
         {pages.map((page, index) => (
           <li key={index} className={styles.indexListItem}>
-            <Link href={page.path}> {page.title} </Link>
+            <div className={styles.pageContent}>
+              <Link href={page.path}>{page.title}</Link>
+              <span className={styles.pageDate}>{page.date}</span>
+            </div>
           </li>
         ))}
       </ul>
