@@ -1,5 +1,5 @@
 1:HL["/_next/static/css/d9ccb3d01cf06ed5.css","style",{"crossOrigin":""}]
-0:["FcdrO2vsyFq7klS3HXwWh",[[["",{"children":["wiki",{"children":["clojure",{"children":["__PAGE__",{}]}]}]},"$undefined","$undefined",true],"$L2",[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/d9ccb3d01cf06ed5.css","precedence":"next","crossOrigin":""}]],"$L3"]]]]
+0:["rYTFyIuMpKXRXKbYpOfwg",[[["",{"children":["wiki",{"children":["clojure",{"children":["__PAGE__",{}]}]}]},"$undefined","$undefined",true],"$L2",[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/d9ccb3d01cf06ed5.css","precedence":"next","crossOrigin":""}]],"$L3"]]]]
 4:HL["/_next/static/css/bd17e4652862e3d3.css","style",{"crossOrigin":""}]
 5:I[8326,["326","static/chunks/326-aefa5a896d3dcfbe.js","124","static/chunks/app/wiki/page-78d61e050b1467b5.js"],""]
 6:I[6954,[],""]
