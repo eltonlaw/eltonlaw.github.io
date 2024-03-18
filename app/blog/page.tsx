@@ -3,17 +3,21 @@ import PageIndex from '@/components/PageIndex';
 
 const pages = [
   {
-    title: 'Building a custom raspberry pi image - pt. 1',
-    path: '/blog/2020-12-07-custom-rpi-pt1',
+    title: 'Building a Custom Raspberry Pi Image: Part 1',
+    path: '/blog/2020-12-07-custom-rpi-part-1',
     date: '2020-12-07',
   }, {
-    title: 'Building A Custom Raspberry Pi Image - pt. 2',
-    path: '/blog/2022-09-19-custom-rpi-pt2',
+    title: 'Building a Custom Raspberry Pi Image: Part 2',
+    path: '/blog/2022-09-19-custom-rpi-part-2',
     date: '2022-09-19',
   }, {
-    title: 'Building a Quadcopter - pt. 1',
-    path: '/blog/2024-02-28-quadcopter-build-pt1',
+    title: 'Building a Quadcopter: Part 1',
+    path: '/blog/2024-02-28-quadcopter-build-part-1',
     date: '2024-02-28',
+  }, {
+    title: 'Building a Quadcopter: Part 2',
+    path: '/blog/2024-03-18-quadcopter-build-part-2',
+    date: '2024-03-18',
   },
 ].sort((a, b) => {
   // sort in descending order of date

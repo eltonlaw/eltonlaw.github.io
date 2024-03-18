@@ -1,7 +1,7 @@
 import PostFrontmatter from "@/components/PostFrontmatter.tsx";
 
 <PostFrontmatter
-    postTitle="Building a Quadcopter Pt.1"
+    postTitle="Building a Quadcopter: Part 1"
     postDate="2024-02-28 1:28AM" />
 
 This is a log for a build of a 7" autonomous quadcopter. I don't know enough about finding and matching components so many selections were finalized by popularity, good documentation or availability of breakout boards. It's a lot easier to figure things out when people have posted a project using that component on Hackaday or if there's  a known, working, reference implementation in Arduino.
@@ -20,7 +20,7 @@ I'm expecting to use this as a cheap, customizable platform for running experime
 - Props: [HQ Prop 7X3.5X3 Grey](https://rotorvillage.ca/hq-prop-7x3-5x3-grey-2cw-2ccw/)
 - Motors: [GEPRC EM2810 1350KV Motor](https://geprc.com/product/geprc-em2810-motor/)
 
-The battery I got provides 22.8V, with max of 25.2 and min of 18V, so I'm going to need to step that down to 3.3V since the IMU, GPS and STM32G070RB all use that. I've chosen a LM2596 buck converter to step down the voltage, I'm a bit worried about it messing with the magnetometer and GPS readings but 
+The battery I got are standard 6S batteries used commonly in the community. They provide 22.8V, with max of 25.2 and min of 18V, so I'm going to need to step that down to 3.3V since the IMU, GPS and STM32G070RB all use that. I've chosen a LM2596 buck converter to step down the voltage, I'm a bit worried about it messing with the magnetometer and GPS readings but I'll see how much noise it creates. I don't care too much about cutting down flight time so I'll just replace it with a linear voltage regulator in the worse case.
 
 "The ESC's current rating should be 10-20% higher than the motor's" [^1], so peak current for the motors I chose is 54A, need something between 60A and 65A. I picked this [Foxeer Reaper F4 Mini](https://www.foxeer.com/foxeer-reaper-f4-mini-128k-4in1-bl32-60a-esc-9-40v-20-20mm-m3-g-419) since it was cheap, operated within a safe current range and supports DShot600 and DShot1200. The mounting holes are for a 20x20mm so the flight controller will need to have mounting holes in the same spot. DShot is a protocol for encoding the duty cycle and I figured that I could just hotswap the ESC with something stronger if needed, as long as it's standardized.
 
