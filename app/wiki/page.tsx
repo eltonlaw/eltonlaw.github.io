@@ -3,11 +3,11 @@ import PageIndex from '@/components/PageIndex';
 
 const pages = [
   {
-    title: 'Clojure',
+    title: 'Clojure [WIP]',
     path: '/wiki/clojure',
     date: '',
   }, {
-    title: 'Large Language Models',
+    title: 'Large Language Models [WIP]',
     path: '/wiki/large_language_models',
     date: '',
   },
