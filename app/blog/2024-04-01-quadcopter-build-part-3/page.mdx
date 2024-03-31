@@ -1,0 +1,28 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Building a Quadcopter: Part 3"
+    postDate="2024-04-01 12:58AM" />
+
+By default, the SAM-M10Q is configured using a UART bus with the UBX protocol. It's an 8-bit binary protocol described in this [Interface Description] document.
+
+<img src='/ubx_frame_structure.png' />
+
+Also described, the calculation for CK_A and CK_B is some basic arithmetic over the unique bits of the message:
+
+```
+CK_A = 0, CK_B = 0
+For (I = 0; I < N; I++)
+{
+CK_A = CK_A + Buffer[I]
+CK_B = CK_B + CK_A
+}
+```
+
+`UBX-MON-VER` is a UBX protocol in class `MON` that returns version information and is a polled message type.
+
+Messages are polled by sending a request, which the receiver will respond with the same message populated.
+
+[Interface Description]:https://content.u-blox.com/sites/default/files/u-blox-M10-SPG-5.10_InterfaceDescription_UBX-21035062.pdf
+
+[^1]: [Interface Description]
