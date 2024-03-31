@@ -1,0 +1,104 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Building a Quadcopter: Part 3 - GNSS Basics"
+    postDate="2024-04-01 12:58AM" />
+
+## what is gnss?
+
+GNSS or Global Navigation Satellite Systems is the term for a fleet of satellites and ground station(s) setup for radio navigation. GPS is one such GNSS system and it's maintained by the US government. I'm going to dive in depth into GPS but the base principles are the same regardless of which GNSS system you're working with.
+
+Broadly, each satellite is constantly transmitting it's unique id, a timestamp and its orbital position. Of interest to us are two RF bands for civillian usage: L1, 1575.42MHz and L2, 1227.60MHz. These signals are available to anyone with the equipment to receive them and with an unobstructed path to the satellite.
+
+The signal is an analog signal 
+
+PRN ranging code (a unique id for the satellite)
+
+Once you've read these signals beamed down from space and decoded them, you should notice they're formatted
+
+There are two RF bands used by GPS
+
+## why do we want to integrate it?
+
+## UART 
+
+Powering the SAM-M10Q and connecting its RX/TX pins to the TX/RX pins on the FT232 USB UART and reading the serial output from that gives the following (dataq from right after setting `RESET` to low for a second to reset the chip)
+
+```
+b'$GNGSA,A,1,,,,,,,,\xac$GNTXT,01,01,02,u-blox AG - www.u-blox.com*4E\r\n'
+b'$GNTXT,01,01,02,HW UBX 10 000A0000*53\r\n'
+b'$GNTXT,01,01,02,ROM SPG 5.10 (7b202e)*7C\r\n'
+b'$GNTXT,01,01,02,FWVER=SPG 5.10*40\r\n'
+b'$GNTXT,01,01,02,PROTVER=34.10*1E\r\n' b'$GNTXT,01,01,02,CHIPID=0000009A5D968F4254*0E\r\n'
+b'$GNTXT,01,01,02,MOD=SAM-M10Q*47\r\n'
+b'$GNTXT,01,01,02,GPS;GLO;GAL;BDS*77\r\n'
+b'$GNTXT,01,01,02,SBAS;QZSS*60\r\n'
+b'$GNTXT,01,01,02,ANTSUPERV=AC *00\r\n'
+b'$GNTXT,01,01,02,ANTSTATUS=INIT*3B\r\n'
+b'$GNTXT,01,01,02,PF=F7FFF*4F\r\n'
+b'$GNTXT,01,01,02,Starting GNSS*5A\r\n'
+b'$GNRMC,,V,,,,,,,,,,N,V*37\r\n'
+b'$GNVTG,,,,,,,,,N*2E\r\n'
+b'$GNGGA,,,,,,0,00,99.99,,,,,,*56\r\n'
+b'$GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,1*33\r\n'
+b'$GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,2*30\r\n'
+b'$GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,3*31\r\n'
+b'$GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,4*36\r\n'
+b'$GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,5*37\r\n'
+b'$GPGSV,1,1,00,0*65\r\n'
+b'$GLGSV,1,1,00,0*79\r\n'
+b'$GAGSV,1,1,00,0*74\r\n'
+b'$GBGSV,1,1,00,0*77\r\n'
+b'$GQGSV,1,1,00,0*64\r\n'
+b'$GNGLL,,,,,,V,N*7A\r\n'
+b'$GNTXT,01,01,02,ANTSTATUS=OK*25\r\n'
+b'$GNRMC,,V,,,,,,,,,,N,V*37\r\n'
+b'$GNVTG,,,,,,,,,N*2E\r\n'
+...
+```
+
+I only have one I2C left but 3 more USARTs so I'm going to use UART to communicate with this chip
+
+```
+...
+b'[/home/d0nkrs/dev/quadcopter/stlib/Src/sam_m10q.c:84] INFO - Received message: $GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,3*31\r\n'
+b'[/home/d0nkrs/dev/quadcopter/stlib/Src/sam_m10q.c:84] INFO - Received message: $GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,4*36\r\n'
+b'[/home/d0nkrs/dev/quadcopter/stlib/Src/sam_m10q.c:84] INFO - Received message: $GNGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99,5*37\r\n'
+b'[/home/d0nkrs/dev/quadcopter/stlib/Src/sam_m10q.c:84] INFO - Received message: $GNGLL,,,,,,V,N*7A\r\n'
+...
+```
+
+Seeing it hang waiting for UART to get something, the call to `HAL_UART_Receive` is just waiting forever.
+
+```
+  /* Wait until flag is set */
+  while ((__HAL_UART_GET_FLAG(huart, Flag) ? SET : RESET) == Status)
+  {
+    /* Check for the Timeout */
+    if (Timeout != HAL_MAX_DELAY)
+```
+
+## what is NMEA? what is UBX?
+
+By default, the SAM-M10Q is configured using a UART bus with the UBX protocol. It's an 8-bit binary protocol described in this [Interface Description] document.
+
+<img src='/ubx_frame_structure.png' />
+
+Also described, the calculation for CK_A and CK_B is some basic arithmetic over the unique bits of the message:
+
+```
+CK_A = 0, CK_B = 0
+For (I = 0; I < N; I++)
+{
+CK_A = CK_A + Buffer[I]
+CK_B = CK_B + CK_A
+}
+```
+
+`UBX-MON-VER` is a UBX protocol in class `MON` that returns version information and is a polled message type.
+
+Messages are polled by sending a request, which the receiver will respond with the same message populated.
+
+[Interface Description]:https://content.u-blox.com/sites/default/files/u-blox-M10-SPG-5.10_InterfaceDescription_UBX-21035062.pdf
+
+[^1]: [Interface Description]

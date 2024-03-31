@@ -18,7 +18,11 @@ const pages = [
     title: 'Building a Quadcopter: Part 2',
     path: '/blog/2024-03-18-quadcopter-build-part-2',
     date: '2024-03-18',
-  },
+  }, {
+    title: 'Building a Quadcopter: Part 3',
+    path: '/blog/2024-04-01-quadcopter-build-part-3',
+    date: '2024-04-01',
+  }
 ].sort((a, b) => {
   // sort in descending order of date
   const dateRegex = /(\d{4}-\d{2}-\d{2})/;
