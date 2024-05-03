@@ -1,0 +1,11 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Building a Quadcopter. Pt.3"
+    postDate="2024-03-30 4:16PM" />
+
+I've been using the STM32CubeIDE to build and flash the firmware, it's not bad and it works but I have a few issues. I find it a bit slow to work with. Why doesn't flashing the device have a keyboard shortcut? I navigate to the tab and click the button each time. Which, as a former front end developer is about every 10 seconds. Sometime I haven't even changed anything. Hot reloading and access to a REPL have ruined me. There are other quality of life issues I have, but these could possibly be chalked up to user error since I'm a crusty old fart about Vim and half my brain is permanently occupied by keybindings. The IDE doesn't seem to run on my laptop for some reason, could be an incompatibility with Wayland since I used the exact same installation method and my desktop running with a near identical system on X works. Also, I don't like the idea of tying the build process to closely to the IDE because then the repo is a lot more dependent on the local system and CI is hard to setup. That ties in to my biggest issue, I'm not sure what's happening to the code during the build process. So I decided to port it to CMake.
+
+The high level overview is that I have some C application code I've written, which needs to be compiled. It references the ST HAL libraries which also need to be compiled and the ST low level libraries as well. Inside my C code is a `int main(void)` which is the main entrypoint by convention but that actually needs to be set by the bootloader. Since the STM32 chip being used is an Arm Cortex M0+ processor we need a the compiler, linker and run-time libraries needed to convert the source code into something that'll run on this different architecture. I'll need to write a linker script and startup code to supplement the existing application code.
+
+The STM32G070RB is a 32-bit Cortex M0+ CPU which means it implements the ARMv6-M instruction set, this is not the same as the ARMv6 Thumb instruction set though they are closely relatedwog
