@@ -1,0 +1,109 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Building a Grow Box Pt.1 - STM32 build basics"
+    postDate="2024-05-01 12:31PM" />
+
+I've been using the STM32CubeIDE to build and flash the firmware, it's not bad and it works but I have a few issues. Why doesn't flashing the device have a keyboard shortcut? As a former front end developer I need to click this button every 10 seconds or I'll die. Hot reloading and access to a REPL have ruined me. There are other quality of life issues I have, but these could possibly be chalked up to user error since I'm a crusty fart about Vim and half my brain is permanently occupied by keybindings. The IDE doesn't run on my laptop for some reason (possibly an incompatibility with Wayland). I don't like the idea of tying the build process to closely to the IDE because then the repo is a lot more dependent on the local system and CI is hard to setup. I'm not sure what's happening to the code during the build process. So I decided to build a simpler project with just Make and the [ST provided CMSIS](https://github.com/STMicroelectronics/STM32CubeG0) for the G070. CMSIS (Cortex Microcontroller Software Interface Standard) is a vendor-independent hardware abstraction layer for the ARM Cortex processor series. You can't simply use the code for one processor for some other processor but there are standardized software APIs for system initialization and configuration and so on. Interactions with the CPU will be through bit twiddling registers. I like reading datasheets, makes me feel like a real engineer.
+
+The STM32G070RB is a 32-bit Cortex M0+ CPU which means it implements the ARMv6-M instruction set, this is not the same as the ARMv6 Thumb instruction set though they are closely aligned.
+
+To start, we'll build and flash a simple blinky using the built-in LED on the Nucleo dev board I'm working with. At a high level:
+
+1. Hook up a cross compilation toolchain into Make
+2. Compile some code that:
+    1. Initialize the system clock (we'll need it to use delay)
+    2. Initialize one of the GPIO peripherals
+    3. Configure the pin the LED is connected to for output (from the schematic, GPIO PORT A, PIN5)
+    4. Loop forever: toggle pin, wait 1 second
+
+Grab the CMSIS files:
+
+```bash
+git submodule add git@github.com:STMicroelectronics/STM32CubeG0.git 
+```
+
+It's a standard C compile, but using the ARM toolchain:
+
+```Make
+CC=arm-none-eabi-gcc
+CFLAGS=-mcpu=cortex-m0plus -mthumb -g -O0
+CFLAGS+=-I./STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include
+CFLAGS+=-I./STM32CubeG0/Drivers/CMSIS/Include
+CFLAGS+=-I./src
+LDFLAGS=-Tlinker_script.ld -nostartfiles
+OBJCOPY=arm-none-eabi-objcopy
+
+SRC = $(wildcard src/*.c)
+
+all: main.bin
+
+main.bin: main.elf
+	$(OBJCOPY) -O binary $< $@
+
+main.elf: $(SRC)
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+clean:
+	rm -f *.elf *.bin
+
+flash: main.bin
+	STM32_Programmer_CLI -c port=SWD -w main.bin 0x8000000 -rst
+```
+
+The `flash` recipe at the end writes the final binary file to where flash memory starts on the processor (found in the datasheet). The processor is connected to an intermediary device (ST-LINK) by two pins SWCLK (serial wire clock) and SWDIO (serial wire data I/O), this is a debug interface called SWD. This intermediary device bridges SWD to USB-B and that's what talks to the `STM32_Programmer_CLI`
+
+The source file `src/main.c` will just be a no-op for now.
+
+```C
+#define STM32G070xx
+#include "stm32g0xx.h"
+
+int main(void) {
+    while (1) { }
+}
+```
+
+`#define STM32G070xx` is needed because `#include "stm32g0xx.h"` is a wrapper header file for the the entire G0 family, including the processor-specific headers only when the a processor specific define exists. Adding `#define STM32G070xx` links in `STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g070xx.h` (from the CMSIS git submodule earlier) which has all the register and bit definitions, address mappings and structs needed to use the peripherals. This way we don't have to write binary directly, but can bit bang with definitions. Now we can start writing the firmware.
+
+### Initializing the System Clock
+
+RCC (Reset and Clock Control) manages system and peripheral clocks. From the CMSIS, these are all the registers used, they each map to some physical entity in the hardware:
+
+```C
+/**
+  * @brief Reset and Clock Control
+  */
+typedef struct
+{
+  __IO uint32_t CR;          /*!< RCC Clock Sources Control Register,                                     Address offset: 0x00 */
+  __IO uint32_t ICSCR;       /*!< RCC Internal Clock Sources Calibration Register,                        Address offset: 0x04 */
+  __IO uint32_t CFGR;        /*!< RCC Regulated Domain Clocks Configuration Register,                     Address offset: 0x08 */
+  __IO uint32_t PLLCFGR;     /*!< RCC System PLL configuration Register,                                  Address offset: 0x0C */
+  __IO uint32_t RESERVED0;   /*!< Reserved,                                                               Address offset: 0x10 */
+  __IO uint32_t RESERVED1;   /*!< Reserved,                                                               Address offset: 0x14 */
+  __IO uint32_t CIER;        /*!< RCC Clock Interrupt Enable Register,                                    Address offset: 0x18 */
+  __IO uint32_t CIFR;        /*!< RCC Clock Interrupt Flag Register,                                      Address offset: 0x1C */
+  __IO uint32_t CICR;        /*!< RCC Clock Interrupt Clear Register,                                     Address offset: 0x20 */
+  __IO uint32_t IOPRSTR;     /*!< RCC IO port reset register,                                             Address offset: 0x24 */
+  __IO uint32_t AHBRSTR;     /*!< RCC AHB peripherals reset register,                                     Address offset: 0x28 */
+  __IO uint32_t APBRSTR1;    /*!< RCC APB peripherals reset register 1,                                   Address offset: 0x2C */
+  __IO uint32_t APBRSTR2;    /*!< RCC APB peripherals reset register 2,                                   Address offset: 0x30 */
+  __IO uint32_t IOPENR;      /*!< RCC IO port enable register,                                            Address offset: 0x34 */
+  __IO uint32_t AHBENR;      /*!< RCC AHB peripherals clock enable register,                              Address offset: 0x38 */
+  __IO uint32_t APBENR1;     /*!< RCC APB peripherals clock enable register1,                             Address offset: 0x3C */
+  __IO uint32_t APBENR2;     /*!< RCC APB peripherals clock enable register2,                             Address offset: 0x40 */
+  __IO uint32_t IOPSMENR;    /*!< RCC IO port clocks enable in sleep mode register,                       Address offset: 0x44 */
+  __IO uint32_t AHBSMENR;    /*!< RCC AHB peripheral clocks enable in sleep mode register,                Address offset: 0x48 */
+  __IO uint32_t APBSMENR1;   /*!< RCC APB peripheral clocks enable in sleep mode register1,               Address offset: 0x4C */
+  __IO uint32_t APBSMENR2;   /*!< RCC APB peripheral clocks enable in sleep mode register2,               Address offset: 0x50 */
+  __IO uint32_t CCIPR;       /*!< RCC Peripherals Independent Clocks Configuration Register,              Address offset: 0x54 */
+  __IO uint32_t RESERVED2;   /*!< Reserved,                                                               Address offset: 0x58 */
+  __IO uint32_t BDCR;        /*!< RCC Backup Domain Control Register,                                     Address offset: 0x5C */
+  __IO uint32_t CSR;         /*!< RCC Unregulated Domain Clock Control and Status Register,               Address offset: 0x60 */
+} RCC_TypeDef;
+```
+
+SysTick is a basic timer included as a standard component of the ARM Cortex-M cores that generates interrupt requests at regular intervals. This can be used for context switching or implementing sleep/delay functions.
+
+There are two registers we care about `CR` and `CFGR`. At t
