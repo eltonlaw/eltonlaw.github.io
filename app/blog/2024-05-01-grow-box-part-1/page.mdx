@@ -19,13 +19,13 @@ To start, we'll build and flash a simple blinky using the built-in LED on the Nu
 
 Grab the CMSIS files:
 
-```bash
+```
 git submodule add git@github.com:STMicroelectronics/STM32CubeG0.git 
 ```
 
 It's a standard C compile, but using the ARM toolchain:
 
-```Make
+```
 CC=arm-none-eabi-gcc
 CFLAGS=-mcpu=cortex-m0plus -mthumb -g -O0
 CFLAGS+=-I./STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include
@@ -55,7 +55,7 @@ The `flash` recipe at the end writes the final binary file to where flash memory
 
 The source file `src/main.c` will just be a no-op for now.
 
-```C
+```
 #define STM32G070xx
 #include "stm32g0xx.h"
 
@@ -66,11 +66,31 @@ int main(void) {
 
 `#define STM32G070xx` is needed because `#include "stm32g0xx.h"` is a wrapper header file for the the entire G0 family, including the processor-specific headers only when the a processor specific define exists. Adding `#define STM32G070xx` links in `STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g070xx.h` (from the CMSIS git submodule earlier) which has all the register and bit definitions, address mappings and structs needed to use the peripherals. This way we don't have to write binary directly, but can bit bang with definitions. Now we can start writing the firmware.
 
+### Stepping through the program
+
+```
+openocd -f interface/stlink.cfg -f target/stm32g0x.cfg  -s $(pwd)/openocd/tcl
+```
+
+Inside GDB
+
+```
+target extended-remote localhost:3333
+load
+monitor halt
+disassemble main
+break main
+info registers
+stepi
+```
+
+### ARMv6-M
+
 ### Initializing the System Clock
 
 RCC (Reset and Clock Control) manages system and peripheral clocks. From the CMSIS, these are all the registers used, they each map to some physical entity in the hardware:
 
-```C
+```
 /**
   * @brief Reset and Clock Control
   */
@@ -104,6 +124,69 @@ typedef struct
 } RCC_TypeDef;
 ```
 
-SysTick is a basic timer included as a standard component of the ARM Cortex-M cores that generates interrupt requests at regular intervals. This can be used for context switching or implementing sleep/delay functions.
+SysTick is a standard component of the ARM Cortex-M cores and can be used for context switching or implementing sleep/delay functions among other things. It is a 24-bit clear-on-write timer that has some initial value and decrements every clock cycle. When it hits 0 it'll generate a SysTick interrupt. There's a provided function for configuring this already:
 
-There are two registers we care about `CR` and `CFGR`. At t
+```
+__STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
+{
+  if ((ticks - 1UL) > SysTick_LOAD_RELOAD_Msk)
+  {
+    return (1UL);                                                   /* Reload value impossible */
+  }
+
+  SysTick->LOAD  = (uint32_t)(ticks - 1UL);                         /* set reload register */
+  NVIC_SetPriority (SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */
+  SysTick->VAL   = 0UL;                                             /* Load the SysTick Counter Value */
+  SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk |
+                   SysTick_CTRL_TICKINT_Msk   |
+                   SysTick_CTRL_ENABLE_Msk;                         /* Enable SysTick IRQ and SysTick Timer */
+  return (0UL);                                                     /* Function successful */
+}
+```
+
+- `ticks` is the number of clock ticks per interrupt.
+- `SysTick->VAL` is the tick counter and it gets set to 0 so that we're at known state.
+- `SysTick_CTRL_TICKINT_Msk` is a uint32 with just the bit that enables the SysTick interrupt set to 1
+- `SysTick_CTRL_ENABLE_Msk` is a uint32 with just the bit that enables decrementing `SysTick->VAL`
+- `SysTick_CTRL_CLKSOURCE_Msk` is a uint32 with just the bit that sets the processor clock as source for the SysTick timer
+- Oddly in the ST provided HAL, there's a `__weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)` called as part of `HAL_StatusTypeDef HAL_Init(void)` and it's passing in `#define  TICK_INT_PRIORITY            0U`, setting it to 0 (highest priority) whereas CMSIS is setting it as 3 (lowest priority, it's a 2 bit value). So as is, SysTick stuff will be less accurate if there's a lot of higher priority interrupts generated. I'll leave it as is for now.
+
+Earlier, the processor clock was set at 16 MHz or 16 million cycles per second so to setup `SysTick` for 1ms per tick. This usually isn't hardcoded so that there's the option of calling a `void SystemCoreClockUpdate(void)` but I don't think I need that right now.
+
+```
+SysTick_Config(16000)
+```
+
+One last thing, when enabling interrupts, it's important to define their associated handlers. From the device specific `startup.s` file, all interrupts handlers are declared as weak symbols that default to a `Default_Handler` which is a no-op infinite loop.
+
+```
+...
+.global Default_Handler
+
+  ...
+  .section .text.Default_Handler,"ax",%progbits
+Default_Handler:
+Infinite_Loop:
+  b Infinite_Loop
+  .size Default_Handler, .-Default_Handler
+
+  ...
+  .weak      SysTick_Handler
+  .thumb_set SysTick_Handler,Default_Handler
+```
+
+So if SysTick is enabled and generates an interrupt without a definitive definition of `SysTick_Handler`, it'll hang forever. Since we've configured it to hit 0 every 1ms, simply incrementing a number every interrupt counts the milliseconds since initialization.
+
+```
+volatile uint32_t uw_tick = 0;
+
+void SysTick_Handler(void) {
+    uw_tick++;
+}
+```
+
+At a rate of a tick per 1 ms, it'll only overflow after 2^32 or 4,294,967,296 ms (~49.71 days). Overflow will be handled later, but since this code will be called in such a tight loop, logic will instead be put into everything that uses `uw_tick`.
+
+### References
+
+- STM32CubeG0/Drivers/CMSIS/Include/core_cm0plus.h  
