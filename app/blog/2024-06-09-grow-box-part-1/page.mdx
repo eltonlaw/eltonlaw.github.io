@@ -2,7 +2,7 @@ import PostFrontmatter from "@/components/PostFrontmatter.tsx";
 
 <PostFrontmatter
     postTitle="Building a Grow Box Pt.1 - STM32 build basics"
-    postDate="2024-05-01 12:31PM" />
+    postDate="2024-06-09 23:56PM" />
 
 I've been using the STM32CubeIDE to build and flash the firmware, it's not bad and it works but I have a few issues. Why doesn't flashing the device have a keyboard shortcut? As a former front end developer I need to click this button every 10 seconds or I'll die. Hot reloading and access to a REPL have ruined me. There are other quality of life issues I have, but these could possibly be chalked up to user error since I'm a crusty fart about Vim and half my brain is permanently occupied by keybindings. The IDE doesn't run on my laptop for some reason (possibly an incompatibility with Wayland). I don't like the idea of tying the build process to closely to the IDE because then the repo is a lot more dependent on the local system and CI is hard to setup. I'm not sure what's happening to the code during the build process. So I decided to build a simpler project with just Make and the [ST provided CMSIS](https://github.com/STMicroelectronics/STM32CubeG0) for the G070. CMSIS (Cortex Microcontroller Software Interface Standard) is a vendor-independent hardware abstraction layer for the ARM Cortex processor series. You can't simply use the code for one processor for some other processor but there are standardized software APIs for system initialization and configuration and so on. Interactions with the CPU will be through bit twiddling registers. I like reading datasheets, makes me feel like a real engineer.
 
@@ -68,21 +68,83 @@ int main(void) {
 
 ### Stepping through the program
 
+On-chip debugging is a way to run, pause and inspect the state of the hardware as your code runs. As mentioned previously, the STM32G070 has a SWD interface, providing the pins SWDIO and SWCLK. The nucleo board I'm using has an ST-LINK interface on it, a separate chip, which is what manages the USB connection to the computer. This is physically wired to the SWDIO and SWCLK on the microcontroller and USB commands are converted to the appropriate signals on those pins.
+
+In practise, [OpenOCD](https://openocd.org/pages/documentation.html) starts a server that connects to the microcontroller and client programs (GDB, telnet or TCL) control the microcontroller through it. The server needs to be configured so it can properly send and receive data but there's a [bunch of standard configurations provided on GitHub](https://github.com/openocd-org/openocd/tree/e4c0904731320c686e5074e68db8358e2f3ce83d/tcl), so after cloning that repo, starting the OpenOCD server, for my setup:
+
 ```
 openocd -f interface/stlink.cfg -f target/stm32g0x.cfg  -s $(pwd)/openocd/tcl
 ```
 
-Inside GDB
+Start a GDB server
 
 ```
-target extended-remote localhost:3333
+arm-none-eabi-gdb main.elf
+```
+
+Connect GDB server to OpenOCD server, and load the program.
+
+```
+target remote :3333
 load
 monitor halt
-disassemble main
-break main
-info registers
-stepi
+monitor reset init
 ```
+
+Testing the connection with:
+
+```
+int main(void) {
+    int x;
+    while (1) {
+        x = add(x, 3);
+    }
+}
+```
+
+...And stepping through it shows `x += 3` each loop indicating the code has compiled and flashed correctly!
+
+```
+(gdb) break main
+Breakpoint 1 at 0x800010e: file src/main.c, line 19.
+Note: automatically using hardware breakpoints for read-only addresses.
+(gdb) continue
+Continuing.
+
+Breakpoint 1, main () at src/main.c:19
+19          int x = 0;
+(gdb) step
+halted: PC: 0x08000110
+halted: PC: 0x08000112
+21              x = add(x, 3);
+(gdb) step
+halted: PC: 0x08000114
+halted: PC: 0x08000116
+halted: PC: 0x08000118
+halted: PC: 0x08000248
+add (a=0, b=3) at src/gpio.c:2
+2               return a + b;
+(gdb) step
+halted: PC: 0x08000254
+halted: PC: 0x08000256
+halted: PC: 0x08000258
+3       }
+(gdb) step
+halted: PC: 0x0800025a
+halted: PC: 0x0800025c
+halted: PC: 0x0800025e
+halted: PC: 0x0800011c
+halted: PC: 0x0800011e
+halted: PC: 0x08000120
+halted: PC: 0x08000112
+halted: PC: 0x08000114
+halted: PC: 0x08000116
+halted: PC: 0x08000118
+halted: PC: 0x08000248
+add (a=3, b=3) at src/gpio.c:2
+2               return a + b;
+```
+
 
 ### ARMv6-M
 
