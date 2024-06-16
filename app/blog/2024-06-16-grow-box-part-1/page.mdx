@@ -1,31 +1,34 @@
 import PostFrontmatter from "@/components/PostFrontmatter.tsx";
 
 <PostFrontmatter
-    postTitle="Building a Grow Box Pt.1 - STM32 build basics"
-    postDate="2024-06-09 23:56PM" />
+    postTitle="Building a Grow Box Part 1 - STM32 basics: Getting to blinky with CMSIS"
+    postDate="2024-06-16 01:19AM" />
 
-I've been using the STM32CubeIDE to build and flash the firmware, it's not bad and it works but I have a few issues. Why doesn't flashing the device have a keyboard shortcut? As a former front end developer I need to click this button every 10 seconds or I'll die. Hot reloading and access to a REPL have ruined me. There are other quality of life issues I have, but these could possibly be chalked up to user error since I'm a crusty fart about Vim and half my brain is permanently occupied by keybindings. The IDE doesn't run on my laptop for some reason (possibly an incompatibility with Wayland). I don't like the idea of tying the build process to closely to the IDE because then the repo is a lot more dependent on the local system and CI is hard to setup. I'm not sure what's happening to the code during the build process. So I decided to build a simpler project with just Make and the [ST provided CMSIS](https://github.com/STMicroelectronics/STM32CubeG0) for the G070. CMSIS (Cortex Microcontroller Software Interface Standard) is a vendor-independent hardware abstraction layer for the ARM Cortex processor series. You can't simply use the code for one processor for some other processor but there are standardized software APIs for system initialization and configuration and so on. Interactions with the CPU will be through bit twiddling registers. I like reading datasheets, makes me feel like a real engineer.
+I've been using the STM32CubeIDE to build and flash the firmware, it's not bad and it works but I have a few issues. Why doesn't flashing the device have a keyboard shortcut? As a former front end developer I need to click this button every 10 seconds or I'll die. Hot reloading and access to a REPL have ruined me. There are other quality of life issues I have, but these could possibly be chalked up to user error since I'm a crusty fart about Vim and half my brain is permanently occupied by keybindings. The IDE doesn't run on my laptop for some reason (possibly an incompatibility with Wayland). I don't like the idea of tying the build process to closely to the IDE because then the repo is a lot more dependent on the local system and CI is hard to setup. I'm not sure what's happening to the code during the build process.
 
-The STM32G070RB is a 32-bit Cortex M0+ CPU which means it implements the ARMv6-M instruction set, this is not the same as the ARMv6 Thumb instruction set though they are closely aligned.
+So I decided to build a simpler project with just Make and the [ST provided CMSIS](https://github.com/STMicroelectronics/STM32CubeG0) for the G070. CMSIS (Cortex Microcontroller Software Interface Standard) is a vendor-independent hardware abstraction layer for the ARM Cortex processor series. You can't simply use the code for one processor for some other processor but there are standardized software APIs for system initialization and configuration and so on. Interactions with the CPU will be through bit twiddling registers. I like reading datasheets, makes me feel like a real engineer.
 
-To start, we'll build and flash a simple blinky using the built-in LED on the Nucleo dev board I'm working with. At a high level:
+The STM32G070RB is a 32-bit Cortex M0+ CPU which means it implements the ARMv6-M instruction set, this is not the same as the ARMv6 Thumb instruction set though they are closely aligned. To start, we'll build and flash a simple blinky using the built-in LED on the [Nucleo dev board](https://www.digikey.ca/en/products/detail/stmicroelectronics/NUCLEO-G070RB/9861521) I'm working with. At a high level:
 
 1. Hook up a cross compilation toolchain into Make
-2. Compile some code that:
-    1. Initialize the system clock (we'll need it to use delay)
-    2. Initialize one of the GPIO peripherals
+2. Compile some code that does the following:
+    1. Initialize the system clock, we'll need it to implement the equivalent of `time.sleep(ms: int)`
+    2. Initialize the GPIO peripherals being used
     3. Configure the pin the LED is connected to for output (from the schematic, GPIO PORT A, PIN5)
     4. Loop forever: toggle pin, wait 1 second
+3. Flash to device
+
+### Cross-compiling and linking the binary
 
 Grab the CMSIS files:
 
-```
+```bash
 git submodule add git@github.com:STMicroelectronics/STM32CubeG0.git 
 ```
 
 It's a standard C compile, but using the ARM toolchain:
 
-```
+```Makefile
 CC=arm-none-eabi-gcc
 CFLAGS=-mcpu=cortex-m0plus -mthumb -g -O0
 CFLAGS+=-I./STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include
@@ -55,7 +58,7 @@ The `flash` recipe at the end writes the final binary file to where flash memory
 
 The source file `src/main.c` will just be a no-op for now.
 
-```
+```C
 #define STM32G070xx
 #include "stm32g0xx.h"
 
@@ -64,7 +67,7 @@ int main(void) {
 }
 ```
 
-`#define STM32G070xx` is needed because `#include "stm32g0xx.h"` is a wrapper header file for the the entire G0 family, including the processor-specific headers only when the a processor specific define exists. Adding `#define STM32G070xx` links in `STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g070xx.h` (from the CMSIS git submodule earlier) which has all the register and bit definitions, address mappings and structs needed to use the peripherals. This way we don't have to write binary directly, but can bit bang with definitions. Now we can start writing the firmware.
+`#define STM32G070xx` is needed because `#include "stm32g0xx.h"` is a wrapper header file for the the entire G0 family, including the processor-specific headers only when the a processor specific define exists. Adding `#define STM32G070xx` links in `STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g070xx.h` (from the CMSIS git submodule earlier) which has all the register and bit definitions, address mappings and structs needed to use the peripherals. This way we don't have to write binary directly, but can bit bang with definitions.
 
 ### Stepping through the program
 
@@ -72,19 +75,19 @@ On-chip debugging is a way to run, pause and inspect the state of the hardware a
 
 In practise, [OpenOCD](https://openocd.org/pages/documentation.html) starts a server that connects to the microcontroller and client programs (GDB, telnet or TCL) control the microcontroller through it. The server needs to be configured so it can properly send and receive data but there's a [bunch of standard configurations provided on GitHub](https://github.com/openocd-org/openocd/tree/e4c0904731320c686e5074e68db8358e2f3ce83d/tcl), so after cloning that repo, starting the OpenOCD server, for my setup:
 
-```
+```bash
 openocd -f interface/stlink.cfg -f target/stm32g0x.cfg  -s $(pwd)/openocd/tcl
 ```
 
 Start a GDB server
 
-```
+```bash
 arm-none-eabi-gdb main.elf
 ```
 
 Connect GDB server to OpenOCD server, and load the program.
 
-```
+```gdb
 target remote :3333
 load
 monitor halt
@@ -93,7 +96,7 @@ monitor reset init
 
 Testing the connection with:
 
-```
+```C
 int main(void) {
     int x;
     while (1) {
@@ -104,7 +107,7 @@ int main(void) {
 
 ...And stepping through it shows `x += 3` each loop indicating the code has compiled and flashed correctly!
 
-```
+```gdb
 (gdb) break main
 Breakpoint 1 at 0x800010e: file src/main.c, line 19.
 Note: automatically using hardware breakpoints for read-only addresses.
@@ -145,14 +148,23 @@ add (a=3, b=3) at src/gpio.c:2
 2               return a + b;
 ```
 
+With each step, the accumulator var `a` is increasing by 3, as expected, so we have some C code properly executing additions on the chip now. To interact with the physical world, we'll need a little more setup.
 
 ### ARMv6-M
 
 ### Initializing the System Clock
 
-RCC (Reset and Clock Control) manages system and peripheral clocks. From the CMSIS, these are all the registers used, they each map to some physical entity in the hardware:
+<img src='/rm0454__124-clock-tree.png ' />
 
-```
+The primary clock source can be set as one of HSI16 RC (high speed integrated 16Mhz), HSE OSC (high speed external clock source), LSI RC (low speed integrated 32Khz), LSE OSC (low speed external clock source), I2S_CKIN (I2S1 peripheral).
+
+Based on whichever one is picked, that becomes the base and affects all the secondary clock signals that derive from it with some prescale divider.
+
+> Upon system reset, the HSISYS clock derived from HSI16 oscillator is selected as system clock.
+
+By default, the base processor clock is set at 16MHz. In the CMSIS, RCC (Reset and Clock Control) is what manages system and peripheral clocks. These are all the registers avaialable, they each map to some physical entity in the hardware:
+
+```C
 /**
   * @brief Reset and Clock Control
   */
@@ -188,7 +200,7 @@ typedef struct
 
 SysTick is a standard component of the ARM Cortex-M cores and can be used for context switching or implementing sleep/delay functions among other things. It is a 24-bit clear-on-write timer that has some initial value and decrements every clock cycle. When it hits 0 it'll generate a SysTick interrupt. There's a provided function for configuring this already:
 
-```
+```C
 __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
 {
   if ((ticks - 1UL) > SysTick_LOAD_RELOAD_Msk)
@@ -213,15 +225,18 @@ __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
 - `SysTick_CTRL_CLKSOURCE_Msk` is a uint32 with just the bit that sets the processor clock as source for the SysTick timer
 - Oddly in the ST provided HAL, there's a `__weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)` called as part of `HAL_StatusTypeDef HAL_Init(void)` and it's passing in `#define  TICK_INT_PRIORITY            0U`, setting it to 0 (highest priority) whereas CMSIS is setting it as 3 (lowest priority, it's a 2 bit value). So as is, SysTick stuff will be less accurate if there's a lot of higher priority interrupts generated. I'll leave it as is for now.
 
-Earlier, the processor clock was set at 16 MHz or 16 million cycles per second so to setup `SysTick` for 1ms per tick. This usually isn't hardcoded so that there's the option of calling a `void SystemCoreClockUpdate(void)` but I don't think I need that right now.
+Earlier, we saw that the processor clock was set at 16 MHz and 16MHz is 16 million cycles per second, 1ms is 0.001 seconds, therefore 16000 cycles would be 1ms. So to setup SysTick for 1ms per tick:
 
+```C
+SysTick_Config(16000);
+SystemCoreClockUpdate();
 ```
-SysTick_Config(16000)
-```
+
+We need to call `SystemCoreClockUpdate` because `SysTick_Config` only changes the register values but `SystemCoreClockUpdate()` ensures that the global variable `SystemCoreClock` is updated to reflect the current core clock frequency.
 
 One last thing, when enabling interrupts, it's important to define their associated handlers. From the device specific `startup.s` file, all interrupts handlers are declared as weak symbols that default to a `Default_Handler` which is a no-op infinite loop.
 
-```
+```armasm
 ...
 .global Default_Handler
 
@@ -239,7 +254,7 @@ Infinite_Loop:
 
 So if SysTick is enabled and generates an interrupt without a definitive definition of `SysTick_Handler`, it'll hang forever. Since we've configured it to hit 0 every 1ms, simply incrementing a number every interrupt counts the milliseconds since initialization.
 
-```
+```C
 volatile uint32_t uw_tick = 0;
 
 void SysTick_Handler(void) {
@@ -249,6 +264,72 @@ void SysTick_Handler(void) {
 
 At a rate of a tick per 1 ms, it'll only overflow after 2^32 or 4,294,967,296 ms (~49.71 days). Overflow will be handled later, but since this code will be called in such a tight loop, logic will instead be put into everything that uses `uw_tick`.
 
-### References
+### GPIO configuration
 
-- STM32CubeG0/Drivers/CMSIS/Include/core_cm0plus.h  
+On the nucleo board, there's a green LED, LD4 connected to PA5. 
+
+<img src='/mb1360-g070rb_schematic__5.png' />
+
+To get that to blink, the GPIO pin needs to be configured for output. All peripherals are disabled by default, so first the GPIO clock needs to be enabled, this is managed by RCC.
+
+```C
+RCC->IOPENR |= RCC_IOPENR_GPIOAEN;
+/* Ensure clock is enabled by read op */
+volatile uint32_t tmpreg = RCC->IOPENR & RCC_IOPENR_GPIOAEN;
+(void) tmpreg; /* avoid compiler warnings about unused var */
+```
+
+The relevant global struct that deals with that is `GPIOA` defined in `STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g070xx.h`
+
+```C
+#define GPIOA               ((GPIO_TypeDef *) GPIOA_BASE)
+...
+/**
+  * @brief General Purpose I/O
+  */
+typedef struct
+{
+  __IO uint32_t MODER;       /*!< GPIO port mode register,               Address offset: 0x00      */
+  __IO uint32_t OTYPER;      /*!< GPIO port output type register,        Address offset: 0x04      */
+  __IO uint32_t OSPEEDR;     /*!< GPIO port output speed register,       Address offset: 0x08      */
+  __IO uint32_t PUPDR;       /*!< GPIO port pull-up/pull-down register,  Address offset: 0x0C      */
+  __IO uint32_t IDR;         /*!< GPIO port input data register,         Address offset: 0x10      */
+  __IO uint32_t ODR;         /*!< GPIO port output data register,        Address offset: 0x14      */
+  __IO uint32_t BSRR;        /*!< GPIO port bit set/reset  register,     Address offset: 0x18      */
+  __IO uint32_t LCKR;        /*!< GPIO port configuration lock register, Address offset: 0x1C      */
+  __IO uint32_t AFR[2];      /*!< GPIO alternate function registers,     Address offset: 0x20-0x24 */
+  __IO uint32_t BRR;         /*!< GPIO Bit Reset register,               Address offset: 0x28      */
+} GPIO_TypeDef;
+```
+
+And a basic output configuration for Port A, Pin 5:
+
+```C
+/* Configure pin to be output */ 
+GPIOA->MODER &= ~GPIO_MODER_MODE5;
+GPIOA->MODER |= GPIO_MODER_MODE5_0;
+
+/* Clear pin to make pin push-pull mode (as opposed to open drain) */ 
+GPIOA->OTYPER &= ~GPIO_OTYPER_OT5;
+
+/* GPIO_OSPEEDR_OSPEED5_0 corresponds to `01` in bit[10:11] of OSPEEDR which means "Low speed"  */
+GPIOA->OSPEEDR &= ~GPIO_OSPEEDR_OSPEED5;
+GPIOA->OSPEEDR |= GPIO_OSPEEDR_OSPEED5_0;
+
+/* Clears the pin5 bits in PUPDR which means no pull-up or pull-down */
+GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD5;
+```
+
+Once we have this configured, we can run the following in an infinite loop to set pin 5 for a second, clear it for a second
+
+```C
+while (1) {
+    GPIOA->BSRR = GPIO_BSRR_BS5;
+    delay(1000);
+    GPIOA->BSRR = GPIO_BSRR_BR5;
+    delay(1000);
+}
+```
+and that blinks the light:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mCYVTn8uvUA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

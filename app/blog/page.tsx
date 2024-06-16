@@ -19,9 +19,9 @@ const pages = [
     path: '/blog/2024-03-18-quadcopter-build-part-2',
     date: '2024-03-18',
   }, {
-    title: 'Building a Grow Box: Part 1 - STM32 build basics',
-    path: '/blog/2024-06-09-grow-box-part-1',
-    date: '2024-06-09',
+    title: 'Building a Grow Box Part 1 - STM32 basics',
+    path: '/blog/2024-06-16-grow-box-part-1',
+    date: '2024-06-16',
   }
 ].sort((a, b) => {
   // sort in descending order of date
