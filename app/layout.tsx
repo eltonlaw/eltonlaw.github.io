@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import styles from '@/styles/RootLayout.module.css';
 import "@/styles/globals.css";
+import 'highlight.js/styles/default.css';
 
 export const metadata = {
   title: 'eltonlaw',
