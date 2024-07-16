@@ -1,0 +1,237 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Building a Grow Box Part 2 - Startup"
+    postDate="2024-06-16 01:19AM" />
+
+## linker_script.ld
+
+[`linker_script.ld`](https://github.com/eltonlaw/grow_box/blob/ae2f98f6b05255ffc7b34f53357f5c7018cad453/linker_script.ld) is passed to `arm-none-eabi-gcc` via `-Tlinker_script.ld` and it defines the memory layout and section placement during program execution.
+
+```
+ENTRY(Reset_Handler)
+```
+
+`Reset_Handler` will be executed right after power-on.
+
+```
+_estack = ORIGIN(RAM) + LENGTH(RAM);
+```
+
+The stack starts at the highest address and decrements, `_estack` will be the initialization value of the stack pointer.
+
+```
+MEMORY
+{
+  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 36K
+  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 128K
+}
+```
+
+These values are just taken from the datasheet of the processor.
+
+```
+SECTIONS
+{
+...
+}
+```
+
+`SECTIONS` are where what type of data goes into which memory region. 
+
+```
+  .isr_vector :
+  {
+    . = ALIGN(4);
+    KEEP(*(.isr_vector)) /* Startup code */
+    . = ALIGN(4);
+  } >FLASH
+```
+
+`>FLASH` specifies that the section should be placed in the FLASH memory region. `isr_vector` contains the interrupt vector table is placed at `0x00000000` in flash memory. When booting from flash, it'll be looking for that there. This is an array of 32-bit pointers to functions, the index of the pointer corresponds to a specific interrupt. The first 15 are common to all ARM processors [and defined by ARM here](https://developer.arm.com/documentation/107706/0100/Exceptions-and-interrupts-overview/Exception-types), (keep in mind that lower priority numbers take priority over higher priority numbers). Any interrupts after that are either ST defined or custom.
+
+```
+  .text :
+  {
+    . = ALIGN(4);
+    *(.text)           /* .text sections (code) */
+    *(.text*)          /* .text* sections (code) */
+    *(.glue_7)         /* glue arm to thumb code */
+    *(.glue_7t)        /* glue thumb to arm code */
+    *(.eh_frame)
+
+    KEEP (*(.init))
+    KEEP (*(.fini))
+
+    . = ALIGN(4);
+    _etext = .;        /* define a global symbols at end of code */
+  } >FLASH
+```
+
+Right after the vector table is where we put the code sections
+
+After that there are a few more sections I'm not going to go into:
+
+- `.rodata`: Read only data like constants and string literals
+- `.ARM.extab`
+- `.ARM`
+- `.preinit_array`
+- `.init_array`
+- `.fini_array`
+
+```
+  .data :
+  {
+    . = ALIGN(4);
+    _sdata = .;
+    *(.data)
+    *(.data*)
+    *(.RamFunc)
+    *(.RamFunc*)
+
+    . = ALIGN(4);
+    _edata = .;
+
+  } >RAM AT> FLASH
+```
+
+`>RAM AT> FLASH` tells the linker to copy all of this from FLASH memory at startup. `.data` is non-zero initialized data. Global symbols `_sdata` and `_edata` are created to mark the start and end of this section. `.RamFunc` sections is code that is going to be executed from RAM rather than FLASH.
+
+```
+  .bss :
+  {
+    /* This is used by the startup in order to initialize the .bss section */
+    _sbss = .;         /* define a global symbol at bss start */
+    __bss_start__ = _sbss;
+    *(.bss)
+    *(.bss*)
+    *(COMMON)
+
+    . = ALIGN(4);
+    _ebss = .;         /* define a global symbol at bss end */
+    __bss_end__ = _ebss;
+  } >RAM
+```
+
+`.bss` is all zero initialized and uninitialized data, Global symbols `_sbss` and `_ebss` are created to mark the start and end of this section and on init we can just fill from start to end with zeros.
+
+```
+  ._user_heap_stack :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = . + _Min_Heap_Size;
+    . = . + _Min_Stack_Size;
+    . = ALIGN(8);
+  } >RAM
+```
+
+`.user_heap_stack` is the last section in RAM, since the heap grows up to meet the stack growing down to maximize utilization.
+
+## Startup Code
+
+[`startup_stm32g070xx.s`](https://github.com/eltonlaw/grow_box/blob/ae2f98f6b05255ffc7b34f53357f5c7018cad453/src/startup_stm32g070xx.s) contains the code to run the setup necessary to execute the application `main`. The first lines are assembler directives.
+
+```armasm
+.syntax unified
+```
+
+Use [unified instruction set syntax](https://sourceware.org/binutils/docs/as/ARM_002dInstruction_002dSet.html#ARM_002dInstruction_002dSet) for `ARM` and `THUMB` instructions. 
+
+```armasm
+.cpu cortex-m0plus
+```
+
+Select the processor core. This is equivalent to hardcoding the `-mcpu` CLI option. This determines the available instructions and features that the compiler can use.
+
+```armasm
+.fpu softvfp
+```
+
+Cortex M0+ does not have a hardware floating point unit so we tell the assembler that floating point ops need to be emulated using integer instructions and to use general purpose registers to store arguments and return values. There is a standard floating-point instruction set and this allows us to keep using those instructions at the cost of slower execution.
+
+```armasm
+.thumb
+```
+
+There are two 32 bit instruction sets ARM (A32) and Thumb (T32). ARM instructions are always 32-bit whereas thumb instructions includes both 16-bit and 32-bit instructions. ARMv6-M only supports Thumb instructions. This tells the assembler that all subsequent instructions should be read as T32 instructions.
+
+```armasm
+.global g_pfnVectors
+.global Default_Handler
+```
+
+Two globally visible symbols are declared `g_pfnVectors` and `Default_Handler`. `g_pfnVectors` for a global array of pointers to functions/function pointers to be used by the interrupt handler to lookup the correct function to call based on the interrupt triggered. `Default_Handler` is the fallback function when there's no function found for that interrupt type.
+
+```armasm
+.word _sidata
+.word _sdata
+.word _edata
+.word _sbss
+.word _ebss
+```
+
+Allocate and initialize space for the 5 addresses marking start/end of sections, to be used by `Reset_Handler` during runtime initialization.
+
+### Reset Handler
+
+`Reset_Handler` is what gets called when the device powers up, from page 51 of the [reference manual](https://www.st.com/resource/en/reference_manual/rm0454-stm32g0x0-advanced-armbased-32bit-mcus-stmicroelectronics.pdf)
+
+> ...After this startup delay has elapsed, the CPU fetches the top-of-stack value from address 0x0000 0000, then starts code execution from the boot memory at 0x0000 0004.
+
+The vector table is placed at `0x0000 0000` (of flash memory) and the pointer to the reset handler is defined to be at index 1.
+
+```armasm
+  .section .text.Reset_Handler
+  .weak Reset_Handler
+  .type Reset_Handler, %function
+Reset_Handler:
+  ldr   r0, =_estack
+  mov   sp, r0          /* set stack pointer */
+
+/* Call the clock system initialization function.*/
+  bl  SystemInit
+
+/* Copy the data segment initializers from flash to SRAM */
+  ldr r0, =_sdata
+  ldr r1, =_edata
+  ldr r2, =_sidata
+  movs r3, #0
+  b LoopCopyDataInit
+
+CopyDataInit:
+  ldr r4, [r2, r3]
+  str r4, [r0, r3]
+  adds r3, r3, #4
+
+LoopCopyDataInit:
+  adds r4, r0, r3
+  cmp r4, r1
+  bcc CopyDataInit
+
+/* Zero fill the bss segment. */
+  ldr r2, =_sbss
+  ldr r4, =_ebss
+  movs r3, #0
+  b LoopFillZerobss
+
+FillZerobss:
+  str  r3, [r2]
+  adds r2, r2, #4
+
+LoopFillZerobss:
+  cmp r2, r4
+  bcc FillZerobss
+```
+
+`Reset_Handler` does the following:
+
+1. Set the top of the stack with the value of the global symbol `_estack` created by the linker, as the stack pointer
+2. Call `SystemInit`, which is a vendor-defined no-op currently
+3. Call `LoopCopyDataInit` which copies from r2
+
+### Interrupt Service Routine Vector Table
+
+
+
