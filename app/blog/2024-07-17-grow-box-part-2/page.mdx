@@ -48,7 +48,7 @@ SECTIONS
   } >FLASH
 ```
 
-`>FLASH` specifies that the section should be placed in the FLASH memory region. `isr_vector` contains the interrupt vector table is placed at `0x00000000` in flash memory. When booting from flash, it'll be looking for that there. This is an array of 32-bit pointers to functions, the index of the pointer corresponds to a specific interrupt. The first 15 are common to all ARM processors [and defined by ARM here](https://developer.arm.com/documentation/107706/0100/Exceptions-and-interrupts-overview/Exception-types), (keep in mind that lower priority numbers take priority over higher priority numbers). Any interrupts after that are either ST defined or custom.
+`>FLASH` specifies that the section should be placed in the FLASH memory region. `isr_vector` contains the interrupt vector table and is placed at `0x00000000` in flash memory. When booting from flash, the microcontroller will be looking at that address. `isr_vector` is an array of 32-bit pointers to functions, the index of the pointer corresponds to a specific interrupt. The first 15 are common to all ARM processors [and defined by ARM here](https://developer.arm.com/documentation/107706/0100/Exceptions-and-interrupts-overview/Exception-types), (keep in mind that lower priority numbers take priority over higher priority numbers). Any interrupts after that are either ST defined or custom.
 
 ```
   .text :
@@ -95,7 +95,7 @@ After that there are a few more sections I'm not going to go into:
   } >RAM AT> FLASH
 ```
 
-`>RAM AT> FLASH` tells the linker to copy all of this from FLASH memory at startup. `.data` is non-zero initialized data. Global symbols `_sdata` and `_edata` are created to mark the start and end of this section. `.RamFunc` sections is code that is going to be executed from RAM rather than FLASH.
+`>RAM AT> FLASH` tells the linker to copy all of this from FLASH memory at startup. `.data` is non-zero initialized data. Global symbols `_sdata` and `_edata` are created to mark the start and end of this section. These symbols will be used by the startup code in `Reset_Handler`. The `.RamFunc` sections are special code that is going to be executed from RAM rather than FLASH.
 
 ```
   .bss :
@@ -180,7 +180,21 @@ Allocate and initialize space for the 5 addresses marking start/end of sections,
 
 > ...After this startup delay has elapsed, the CPU fetches the top-of-stack value from address 0x0000 0000, then starts code execution from the boot memory at 0x0000 0004.
 
-The vector table is placed at `0x0000 0000` (of flash memory) and the pointer to the reset handler is defined to be at index 1.
+The vector table is placed at `0x0000 0000` (of flash memory) and the pointer to the reset handler is set at index 1
+
+```
+  ...
+  .section .isr_vector,"a",%progbits
+  .type g_pfnVectors, %object
+
+g_pfnVectors:
+  .word _estack
+  .word Reset_Handler
+  .word NMI_Handler
+  ...
+```
+
+Here's `Reset_Handler`
 
 ```armasm
   .section .text.Reset_Handler
@@ -229,9 +243,7 @@ LoopFillZerobss:
 
 1. Set the top of the stack with the value of the global symbol `_estack` created by the linker, as the stack pointer
 2. Call `SystemInit`, which is a vendor-defined no-op currently
-3. Call `LoopCopyDataInit` which copies from r2
-
-### Interrupt Service Routine Vector Table
-
-
-
+3. Call `LoopCopyDataInit`
+    1. Calls `LoopCopyDataInit` which loads each value of the data segment from `_sdata` to `_edata` in flash and stores it in RAM.
+    2. Calls `LoopFillZerobss` stores 0 at every address from `_sbss` (start of BSS) to `_ebss` (end of BSS)
+4. `LoopFillZerobss` calls C runtime library init `__libc_init_array` and then calls `main`

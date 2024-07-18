@@ -24,8 +24,8 @@ const pages = [
     date: '2024-06-16',
   }, {
     title: 'Building a Grow Box Part 2 - Startup',
-    path: '/blog/2024-06-27-grow-box-part-2',
-    date: '2024-06-16',
+    path: '/blog/2024-07-17-grow-box-part-2',
+    date: '2024-07-17',
   }
 ].sort((a, b) => {
   // sort in descending order of date
