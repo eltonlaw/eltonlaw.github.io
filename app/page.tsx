@@ -6,7 +6,6 @@ const HomePage: NextPage = ({characters}: any) => {
   return (
     <div>
       <Blog/>
-      <Wiki/>
     </div>
   )
 }
