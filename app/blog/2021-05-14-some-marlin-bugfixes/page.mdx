@@ -1,0 +1,50 @@
+import PostFrontmatter from "@/components/PostFrontmatter.tsx";
+
+<PostFrontmatter
+    postTitle="Some Marlin Bugfixes"
+    postDate="2021-05-14 11:06PM" />
+
+I merged some code into [Marlin](https://github.com/MarlinFirmware/Marlin)! I'm feeling very cool right now.  It was just two small bugfixes though.
+
+### Allow disable of currently-required POWER_TIMEOUT [(#21771)](https://github.com/MarlinFirmware/Marlin/pull/21771)
+
+
+`AUTO_POWER_CONTROL` is an energy-saving feature for automatically turning on and off an extra power supply (in dual supply setups) as needed. In `bool Power::is_power_needed()` there are checks to see if the extruder, chamber or cooler are above a certain temperature, in which case it'll turn on the PSU and power the fans for that component. Another piece of code that runs is in `inline void manage_inactivity(const bool ignore_stepper_queue=false)`
+
+```cpp
+TERN_(AUTO_POWER_CONTROL, powerManager.check());
+```
+
+Which is defined as 
+
+```cpp
+void Power::check() {
+  static millis_t nextPowerCheck = 0;
+  millis_t ms = millis();
+  if (ELAPSED(ms, nextPowerCheck)) {
+    nextPowerCheck = ms + 2500UL;
+    if (is_power_needed())
+      power_on();
+    else if (!lastPowerOn || ELAPSED(ms, lastPowerOn + SEC_TO_MS(POWER_TIMEOUT)))
+      power_off();
+  }
+}
+```
+
+The problem is `POWER_TIMEOUT` is assumed to be in the config, if you defined `AUTO_POWER_CONTROL` without it then you get a compile error, as brought up in this [issue](https://github.com/MarlinFirmware/Marlin/issues/21475)
+
+The fix is straightforward, just handle that edge case somehow. I defined it to 0 if undefined and set it to only run the `ELAPSED` check if greater than 0: https://github.com/MarlinFirmware/Marlin/pull/21771/files
+
+### Fix G5 IJ with Motion Mode [(#21858)](https://github.com/MarlinFirmware/Marlin/pull/21858)
+
+[G5](https://marlinfw.org/docs/gcode/G005.html) is the gcode command for creating cubic B-splines and it has optional parameters `I<pos>` and `J<pos>` for setting offsets. The parser logic was ignoring these since there's some error checking at the beginning of `void GCodeParser::parse(char *p)`, making it bail out if there's something unexpected. `I` and `J` was only expected to be passed in for `G2` and `G3` if arc support was enabled.
+
+```cpp
+    #if ENABLED(GCODE_MOTION_MODES)
+      case 'I' ... 'J':
+        if (motion_mode_codenum != 5 && \
+            TERN1(ARC_SUPPORT, motion_mode_codenum != 2 && motion_mode_codenum != 3)) return;
+```
+
+So the fix for this was also straightforward, just set it to allow `I` and `J` for `G5` as well: https://github.com/MarlinFirmware/Marlin/pull/21858/commits/16c6e923e016e27d9488dfa254e5c82faaeb94db
+

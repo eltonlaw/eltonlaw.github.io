@@ -7,6 +7,10 @@ const pages = [
     path: '/blog/2020-12-07-custom-rpi-part-1',
     date: '2020-12-07',
   }, {
+    title: 'Some Marlin Bugfixes',
+    path: '/blog/2021-05-14-some-marlin-bugfixes',
+    date: '2021-05-14',
+  }, {
     title: 'Building a Custom Raspberry Pi Image: Part 2',
     path: '/blog/2022-09-19-custom-rpi-part-2',
     date: '2022-09-19',
