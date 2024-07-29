@@ -1,0 +1,36 @@
+.oscList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.oscItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.date {
+  min-width: 100px; /* Adjust width as needed */
+}
+
+.repo {
+  min-width: 200px; /* Adjust width as needed */
+  margin-left: 10px;
+}
+
+.title {
+  margin-left: 10px;
+  text-decoration: none;
+  color: #1a0dab; /* Link color */
+}
+
+.title:hover {
+  text-decoration: underline;
+}
+
+/* Additional class for shared styling */
+.oscLi {
+  font-family: Arial, sans-serif; /* Example styling */
+  font-size: 14px; /* Example font size */
+}
