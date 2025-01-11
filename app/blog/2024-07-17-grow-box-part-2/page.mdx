@@ -4,6 +4,8 @@ import PostFrontmatter from "@/components/PostFrontmatter.tsx";
     postTitle="Building a Grow Box Part 2 - Startup"
     postDate="2024-07-19 11:44PM" />
 
+The full project is on [github](https://github.com/eltonlaw/grow_box). The below details the compilation of a compatible binary for a Cortex-M0+ processor up to just before the `main` defined in application code.
+
 ## linker_script.ld
 
 [`linker_script.ld`](https://github.com/eltonlaw/grow_box/blob/ae2f98f6b05255ffc7b34f53357f5c7018cad453/linker_script.ld) is passed to `arm-none-eabi-gcc` via `-Tlinker_script.ld` and it defines the memory layout and section placement during program execution.
@@ -19,7 +21,6 @@ _estack = ORIGIN(RAM) + LENGTH(RAM);
 ```
 
 The stack starts at the highest address and decrements, `_estack` will be the initialization value of the stack pointer.
-
 ```
 MEMORY
 {
@@ -131,7 +132,7 @@ After that there are a few more sections I'm not going to go into:
 
 ## Startup Code
 
-[`startup_stm32g070xx.s`](https://github.com/eltonlaw/grow_box/blob/ae2f98f6b05255ffc7b34f53357f5c7018cad453/src/startup_stm32g070xx.s) contains the code to run the setup necessary to execute the application `main`. The first lines are assembler directives.
+[`startup_stm32g070xx.s`](https://github.com/eltonlaw/grow_box/blob/ae2f98f6b05255ffc7b34f53357f5c7018cad453/src/startup_stm32g070xx.s) contains the code to run the setup necessary to execute the application `main`. It is a [standard function as defined by `CMSIS-CORE`](https://arm-software.github.io/CMSIS_6/latest/Core/startup_c_pg.html) and configures interrupt and exception handling. The first lines are assembler directives.
 
 ```armasm
 .syntax unified
